@@ -13,6 +13,7 @@ import { SearchBar } from '@/components/ui/SearchBar';
 import { AppText } from '@/components/ui/AppText';
 import { useToast } from '@/hooks/useToast';
 import { usePostsStore } from '@/store/postsStore';
+import { hapticsCopy, hapticsDeleteHeavy } from '@/utils/haptics';
 
 function nextSortOrder(current: SortOrder): SortOrder {
   switch (current) {
@@ -41,6 +42,7 @@ export default function HomeScreen() {
   const setSearchQuery = usePostsStore((s) => s.setSearchQuery);
   const sortOrder = usePostsStore((s) => s.sortOrder);
   const setSortOrder = usePostsStore((s) => s.setSortOrder);
+  const allPosts = usePostsStore((s) => s.posts);
   const posts = usePostsStore((s) => s.filteredPosts());
   const deletePost = usePostsStore((s) => s.deletePost);
 
@@ -64,6 +66,7 @@ export default function HomeScreen() {
   const onPostCopy = useCallback(
     async (post: Post) => {
       await Clipboard.setStringAsync(post.content);
+      await hapticsCopy();
       showToast({ message: 'Скопировано в буфер', variant: 'success' });
     },
     [showToast]
@@ -71,6 +74,7 @@ export default function HomeScreen() {
 
   const onPostDelete = useCallback(
     (post: Post) => {
+      void hapticsDeleteHeavy();
       deletePost(post.id);
       showToast({ message: 'Пост удалён', variant: 'info' });
     },
@@ -78,6 +82,11 @@ export default function HomeScreen() {
   );
 
   const sortHint = useMemo(() => sortLabel(sortOrder), [sortOrder]);
+
+  const emptySearch =
+    allPosts.length > 0 &&
+    searchQuery.trim().length > 0 &&
+    posts.length === 0;
 
   return (
     <SafeAreaView
@@ -107,6 +116,7 @@ export default function HomeScreen() {
       <View className="flex-1 px-4">
         <PostList
           posts={posts}
+          emptySearch={emptySearch}
           onPostPress={onPostPress}
           onPostCopy={onPostCopy}
           onPostDelete={onPostDelete}

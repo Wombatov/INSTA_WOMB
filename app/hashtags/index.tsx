@@ -125,7 +125,7 @@ export default function HashtagsScreen() {
                 color={Colors.text.secondary}
                 className="text-center"
               >
-                Пока нет наборов. Нажмите «+», чтобы создать первый.
+                Нет наборов хэштегов
               </AppText>
             </View>
           }

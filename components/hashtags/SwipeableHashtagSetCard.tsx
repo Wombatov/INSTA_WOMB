@@ -11,6 +11,7 @@ import Animated, {
 import { Colors } from '@/constants/colors';
 import type { HashtagSet } from '@/types';
 import { AppText } from '@/components/ui/AppText';
+import { hapticsDeleteHeavy } from '@/utils/haptics';
 import { formatHashtags } from '@/utils/textFormatter';
 
 const DELETE_WIDTH = 72;
@@ -47,6 +48,7 @@ export const SwipeableHashtagSetCard = memo<SwipeableHashtagSetCardProps>(
             style: 'destructive',
             onPress: () => {
               resetPosition();
+              void hapticsDeleteHeavy();
               onDelete(item);
             },
           },

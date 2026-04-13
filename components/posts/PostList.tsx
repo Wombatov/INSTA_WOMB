@@ -11,6 +11,8 @@ import { SwipeablePost } from './SwipeablePost';
 
 export interface PostListProps {
   posts: Post[];
+  /** Посты есть, но поиск ничего не нашёл (иначе — пустой список постов) */
+  emptySearch: boolean;
   onPostPress: (post: Post) => void;
   onPostCopy: (post: Post) => void;
   onPostDelete: (post: Post) => void;
@@ -22,6 +24,7 @@ export interface PostListProps {
 export const PostList = memo<PostListProps>(
   ({
     posts,
+    emptySearch,
     onPostPress,
     onPostCopy,
     onPostDelete,
@@ -51,11 +54,15 @@ export const PostList = memo<PostListProps>(
       () => (
         <EmptyState
           icon={FileText}
-          title="Пока нет постов"
-          description="Создай первый пост на вкладке редактора."
+          title={emptySearch ? 'Ничего не найдено' : 'Ещё нет постов'}
+          description={
+            emptySearch
+              ? 'Ничего не найдено по запросу'
+              : 'Ещё нет постов. Напиши первый!'
+          }
         />
       ),
-      []
+      [emptySearch]
     );
 
     return (

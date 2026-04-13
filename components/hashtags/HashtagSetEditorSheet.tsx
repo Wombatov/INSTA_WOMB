@@ -14,6 +14,7 @@ import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/hooks/useToast';
 import { useHashtagsStore } from '@/store/hashtagsStore';
+import { hapticsSaveSuccess } from '@/utils/haptics';
 import { parseHashtagInput } from '@/utils/hashtagInput';
 import { INSTAGRAM_LIMITS } from '@/utils/instagramLimits';
 import { formatHashtags } from '@/utils/textFormatter';
@@ -71,6 +72,7 @@ export const HashtagSetEditorSheet = memo<HashtagSetEditorSheetProps>(
       } else {
         createSet(trimmedName, tags);
       }
+      void hapticsSaveSuccess();
       onClose();
     }, [
       createSet,

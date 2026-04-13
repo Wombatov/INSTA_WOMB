@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useNavigation } from '@react-navigation/native';
 
 import { Colors } from '@/constants/colors';
@@ -22,11 +23,13 @@ import { Button } from '@/components/ui/Button';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useToast } from '@/hooks/useToast';
 import { usePostsStore } from '@/store/postsStore';
+import { hapticsDeleteHeavy, hapticsSaveSuccess } from '@/utils/haptics';
 
 export default function EditPostScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
   const id = typeof rawId === 'string' ? rawId : rawId?.[0];
   const navigation = useNavigation();
+  const headerHeight = useHeaderHeight();
 
   const posts = usePostsStore((s) => s.posts);
   const updatePost = usePostsStore((s) => s.updatePost);
@@ -57,6 +60,7 @@ export default function EditPostScreen() {
         text: 'Удалить',
         style: 'destructive',
         onPress: () => {
+          void hapticsDeleteHeavy();
           deletePost(id);
           showToast({ message: 'Пост удалён', variant: 'info' });
           router.back();
@@ -117,6 +121,7 @@ export default function EditPostScreen() {
       return;
     }
     updatePost(id, { content: trimmed });
+    void hapticsSaveSuccess();
     showToast({ message: 'Изменения сохранены', variant: 'success' });
   }, [id, post, showToast, text, updatePost]);
 
@@ -155,7 +160,9 @@ export default function EditPostScreen() {
         <KeyboardAvoidingView
           className="flex-1"
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+          keyboardVerticalOffset={
+            Platform.OS === 'ios' ? headerHeight + 8 : 0
+          }
         >
           <View className="flex-1 px-4 pb-3">
             <View className="relative min-h-[160px] flex-1">

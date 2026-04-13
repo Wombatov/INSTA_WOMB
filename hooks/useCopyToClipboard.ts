@@ -2,6 +2,8 @@ import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { hapticsCopy } from '@/utils/haptics';
+
 const COPIED_MS = 2000;
 
 export function useCopyToClipboard(text: string) {
@@ -19,7 +21,7 @@ export function useCopyToClipboard(text: string) {
   const copy = useCallback(async () => {
     try {
       await Clipboard.setStringAsync(text);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await hapticsCopy();
       setIsCopied(true);
       if (timerRef.current) {
         clearTimeout(timerRef.current);

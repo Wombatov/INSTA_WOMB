@@ -2,7 +2,10 @@ import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from 'react-native-safe-area-context';
 
 import { Colors } from '@/constants/colors';
 
@@ -11,8 +14,10 @@ import { AppText } from '@/components/ui/AppText';
 import { useToast } from '@/hooks/useToast';
 import { usePostsStore } from '@/store/postsStore';
 import { usePreviewStore } from '@/store/previewStore';
+import { hapticsCopy } from '@/utils/haptics';
 
 export default function PostPreviewScreen() {
+  const insets = useSafeAreaInsets();
   const { postId } = useLocalSearchParams<{ postId?: string }>();
   const id = typeof postId === 'string' ? postId : postId?.[0];
   const posts = usePostsStore((s) => s.posts);
@@ -33,6 +38,7 @@ export default function PostPreviewScreen() {
       return;
     }
     await Clipboard.setStringAsync(text);
+    await hapticsCopy();
     showToast({ message: 'Подпись скопирована', variant: 'success' });
   };
 
@@ -46,7 +52,7 @@ export default function PostPreviewScreen() {
       >
         <ScrollView
           className="flex-1 px-4 pt-2"
-          contentContainerStyle={{ paddingBottom: 32 }}
+          contentContainerStyle={{ paddingBottom: 32 + insets.bottom }}
         >
           <InstagramCard text={text} />
           <View className="mt-6">

@@ -1,3 +1,4 @@
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { type Href, router } from 'expo-router';
 import { Hash } from 'lucide-react-native';
 import React, { useCallback, useState } from 'react';
@@ -22,8 +23,10 @@ import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useToast } from '@/hooks/useToast';
 import { usePostsStore } from '@/store/postsStore';
 import { usePreviewStore } from '@/store/previewStore';
+import { hapticsSaveSuccess } from '@/utils/haptics';
 
 export default function EditorScreen() {
+  const tabBarHeight = useBottomTabBarHeight();
   const [text, setText] = useState('');
   const [selection, setSelection] = useState({ start: 0, end: 0 });
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -42,6 +45,7 @@ export default function EditorScreen() {
     }
     createPost(trimmed);
     setText('');
+    void hapticsSaveSuccess();
     showToast({ message: 'Пост сохранён', variant: 'success' });
   }, [createPost, showToast, text]);
 
@@ -59,7 +63,9 @@ export default function EditorScreen() {
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+        keyboardVerticalOffset={
+          Platform.OS === 'ios' ? tabBarHeight + 8 : 0
+        }
       >
         <View className="flex-1 px-4 pb-3">
           <AppText variant="sectionTitle" className="mb-2">
