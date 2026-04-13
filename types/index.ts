@@ -28,4 +28,6 @@ export interface AppSettings {
   defaultStatus: 'draft' | 'published';
   sortOrder: SortOrder;
   onboardingComplete: boolean;
+  /** Показан ли тултип у маркера обрезки (125 символов) в редакторе */
+  truncationMarkerTooltipSeen?: boolean;
 }
