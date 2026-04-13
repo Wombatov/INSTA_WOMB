@@ -1,98 +1,119 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import { type Href, router } from 'expo-router';
+import { ArrowUpDown } from 'lucide-react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Pressable, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Colors } from '@/constants/colors';
+import type { Post, SortOrder } from '@/types';
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+import { PostList } from '@/components/posts/PostList';
+import { SearchBar } from '@/components/ui/SearchBar';
+import { AppText } from '@/components/ui/AppText';
+import { useToast } from '@/hooks/useToast';
+import { usePostsStore } from '@/store/postsStore';
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+function nextSortOrder(current: SortOrder): SortOrder {
+  switch (current) {
+    case 'newest':
+      return 'oldest';
+    case 'oldest':
+      return 'alphabetical';
+    case 'alphabetical':
+      return 'newest';
+  }
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+function sortLabel(order: SortOrder): string {
+  switch (order) {
+    case 'newest':
+      return 'Сначала новые';
+    case 'oldest':
+      return 'Сначала старые';
+    case 'alphabetical':
+      return 'По алфавиту';
+  }
+}
+
+export default function HomeScreen() {
+  const searchQuery = usePostsStore((s) => s.searchQuery);
+  const setSearchQuery = usePostsStore((s) => s.setSearchQuery);
+  const sortOrder = usePostsStore((s) => s.sortOrder);
+  const setSortOrder = usePostsStore((s) => s.setSortOrder);
+  const posts = usePostsStore((s) => s.filteredPosts());
+  const deletePost = usePostsStore((s) => s.deletePost);
+
+  const { showToast } = useToast();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setSortOrder('newest');
+    setTimeout(() => setRefreshing(false), 250);
+  }, [setSortOrder]);
+
+  const cycleSort = useCallback(() => {
+    setSortOrder(nextSortOrder(sortOrder));
+  }, [setSortOrder, sortOrder]);
+
+  const onPostPress = useCallback((post: Post) => {
+    router.push(`/post/${post.id}` as Href);
+  }, []);
+
+  const onPostCopy = useCallback(
+    async (post: Post) => {
+      await Clipboard.setStringAsync(post.content);
+      showToast({ message: 'Скопировано в буфер', variant: 'success' });
+    },
+    [showToast]
+  );
+
+  const onPostDelete = useCallback(
+    (post: Post) => {
+      deletePost(post.id);
+      showToast({ message: 'Пост удалён', variant: 'info' });
+    },
+    [deletePost, showToast]
+  );
+
+  const sortHint = useMemo(() => sortLabel(sortOrder), [sortOrder]);
+
+  return (
+    <SafeAreaView
+      className="flex-1"
+      style={{ backgroundColor: Colors.bg.primary }}
+      edges={['top']}
+    >
+      <View className="flex-row items-center justify-between px-4 pb-2 pt-1">
+        <AppText variant="sectionTitle">Посты</AppText>
+        <Pressable
+          onPress={cycleSort}
+          accessibilityRole="button"
+          accessibilityLabel={`Сортировка: ${sortHint}. Нажмите, чтобы сменить`}
+          className="min-h-12 flex-row items-center gap-1"
+        >
+          <ArrowUpDown size={22} color={Colors.accent.primary} strokeWidth={1.8} />
+          <AppText variant="caption" color={Colors.text.secondary}>
+            {sortHint}
+          </AppText>
+        </Pressable>
+      </View>
+
+      <View className="px-4 pb-2">
+        <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+      </View>
+
+      <View className="flex-1 px-4">
+        <PostList
+          posts={posts}
+          onPostPress={onPostPress}
+          onPostCopy={onPostCopy}
+          onPostDelete={onPostDelete}
+          onRefresh={onRefresh}
+          refreshing={refreshing}
+        />
+      </View>
+    </SafeAreaView>
+  );
+}
