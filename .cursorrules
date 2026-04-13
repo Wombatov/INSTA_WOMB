@@ -1,0 +1,247 @@
+# CaptionCraft — Cursor Rules & Implementation Guide
+
+> Этот файл читает Cursor AI при работе над проектом.
+> Следуй этим правилам строго при генерации любого кода.
+
+---
+
+## Git — INSTA_WOMB (единственный репозиторий)
+
+- Весь проект CaptionCraft живёт в одном remote: **INSTA_WOMB** (`origin` на GitHub). Других репозиториев для этого приложения не используем.
+- **Корень git** — этот каталог (репозиторий Expo-приложения).
+- **После каждой завершённой итерации** работы агент автоматически делает **commit и push** в `origin` (текущая ветка), если есть незакоммиченные изменения — см. также `.cursor/rules/insta-womb-git-push.mdc`.
+
+---
+
+## Project Identity
+
+- **App Name:** CaptionCraft
+- **Purpose:** Instagram caption editor & storage for Android
+- **Stack:** React Native 0.74, Expo SDK 51, TypeScript strict, Expo Router v3
+- **State:** Zustand 4.x
+- **Storage:** react-native-mmkv
+- **Styles:** NativeWind 4 (Tailwind CSS for React Native)
+- **Animations:** React Native Reanimated 3
+- **Gestures:** React Native Gesture Handler
+
+---
+
+## Code Style Rules
+
+### TypeScript
+- **Всегда используй строгий TypeScript.** Никаких `any`, никаких `@ts-ignore`
+- Экспортируй типы из `types/index.ts`
+- Используй `const` assertions для константных объектов
+- Предпочитай `interface` для объектов, `type` для unions/intersections
+
+### React Native
+- Никогда не используй `StyleSheet.create` — используй NativeWind классы
+- Компоненты — только функциональные с TypeScript пропсами
+- Используй `React.memo()` для компонентов в списках (PostCard, HashtagBadge)
+- Всегда добавляй `accessibilityLabel` и `accessibilityRole` для интерактивных элементов
+- Минимальный touch target: 48×48dp (`min-h-12 min-w-12` в NativeWind)
+
+### File Naming
+- Компоненты: `PascalCase.tsx` (PostCard.tsx)
+- Хуки: `camelCase.ts` с префиксом `use` (useCharCounter.ts)
+- Утилиты: `camelCase.ts` (textFormatter.ts)
+- Константы: `camelCase.ts` (instagramLimits.ts)
+- Экраны Expo Router: `kebab-case.tsx` или `[param].tsx`
+
+### Imports Order
+```typescript
+// 1. React/React Native
+import React, { useState, useCallback } from 'react';
+import { View, Text, Pressable } from 'react-native';
+
+// 2. Expo
+import { router } from 'expo-router';
+
+// 3. Third-party
+import { useMMKVString } from 'react-native-mmkv';
+import Animated from 'react-native-reanimated';
+
+// 4. Internal — абсолютные пути (@/)
+import { Colors } from '@/constants/colors';
+import { PostCard } from '@/components/posts/PostCard';
+import type { Post } from '@/types';
+```
+
+---
+
+## Instagram Logic — Критически Важно
+
+```typescript
+// ВСЕГДА используй Array.from() для подсчёта символов
+// Эмодзи = 1 символ в Instagram, но 2 в обычном JS length
+const charCount = Array.from(text).length; // ✅ правильно
+const charCount = text.length;             // ❌ неправильно для эмодзи
+
+// ЛИМИТЫ — никогда не хардкодь числа, только из констант
+import { INSTAGRAM_LIMITS } from '@/utils/instagramLimits';
+// INSTAGRAM_LIMITS.CAPTION_MAX = 2200
+// INSTAGRAM_LIMITS.CAPTION_TRUNCATE = 125
+// INSTAGRAM_LIMITS.HASHTAG_MAX = 30
+
+// ХЭШТЕГИ — поддержка кириллицы обязательна
+const hashtagRegex = /#[\w\u0400-\u04FF]+/g;
+```
+
+---
+
+## State Management Pattern
+
+```typescript
+// Zustand store — шаблон
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { storage } from '@/utils/storage'; // MMKV wrapper
+
+interface PostsState {
+  posts: Post[];
+  // actions always end with verb
+  addPost: (content: string) => void;
+  updatePost: (id: string, data: Partial<Post>) => void;
+  deletePost: (id: string) => void;
+}
+
+export const usePostsStore = create<PostsState>()(
+  persist(
+    (set, get) => ({
+      posts: [],
+      addPost: (content) => set((state) => ({
+        posts: [createPost(content), ...state.posts]
+      })),
+      // ...
+    }),
+    {
+      name: 'posts-storage',
+      storage: createJSONStorage(() => storage),
+    }
+  )
+);
+```
+
+---
+
+## Navigation Pattern (Expo Router)
+
+```typescript
+// Переход на экран редактирования
+import { router } from 'expo-router';
+router.push(`/post/${post.id}`);
+
+// Открытие модального превью
+router.push('/post/preview');
+
+// Передача данных через params (только примитивы!)
+router.push({ pathname: '/post/preview', params: { postId: post.id } });
+
+// В экране-получателе:
+import { useLocalSearchParams } from 'expo-router';
+const { postId } = useLocalSearchParams<{ postId: string }>();
+```
+
+---
+
+## Component Template
+
+```typescript
+// components/example/ExampleComponent.tsx
+import React, { memo } from 'react';
+import { View, Pressable } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { AppText } from '@/components/ui/AppText';
+
+interface ExampleComponentProps {
+  title: string;
+  onPress: () => void;
+  disabled?: boolean;
+}
+
+export const ExampleComponent = memo<ExampleComponentProps>(({ 
+  title, 
+  onPress, 
+  disabled = false 
+}) => {
+  const scale = useSharedValue(1);
+  
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }]
+  }));
+
+  return (
+    <Animated.View style={animatedStyle} className="...NativeWind classes...">
+      <Pressable
+        onPress={onPress}
+        onPressIn={() => { scale.value = withSpring(0.97); }}
+        onPressOut={() => { scale.value = withSpring(1); }}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        className="min-h-12 min-w-12 ..."
+      >
+        <AppText>{title}</AppText>
+      </Pressable>
+    </Animated.View>
+  );
+});
+
+ExampleComponent.displayName = 'ExampleComponent';
+```
+
+---
+
+## Storage Rules
+
+```typescript
+// utils/storage.ts — единственная точка входа для MMKV
+// НИКОГДА не обращайся к MMKV напрямую из компонентов
+
+// ✅ Правильно — через store или хук
+const posts = usePostsStore((state) => state.posts);
+
+// ❌ Неправильно — прямой доступ из компонента
+const storage = new MMKV();
+const posts = storage.getString('posts');
+```
+
+---
+
+## Error Handling
+
+```typescript
+// Все async операции оборачивай в try/catch
+// Показывай пользователю Toast при ошибке, не console.error
+
+try {
+  await someOperation();
+} catch (error) {
+  showToast({ message: 'Не удалось сохранить пост', type: 'error' });
+  // Опционально: Sentry.captureException(error);
+}
+```
+
+---
+
+## Accessibility Checklist
+
+При создании любого интерактивного компонента:
+- [ ] `accessibilityLabel` — описание действия
+- [ ] `accessibilityRole` — button/text/image/etc
+- [ ] `accessibilityHint` — дополнительный контекст (опционально)
+- [ ] `disabled` state обрабатывается визуально и функционально
+- [ ] Минимум 48×48dp для touch target
+- [ ] Достаточный цветовой контраст (проверяй по DESIGN_SYSTEM.md)
+
+---
+
+## What NOT to Generate
+
+- Не генерируй `class` компоненты — только функциональные
+- Не используй `StyleSheet.create` — только NativeWind
+- Не используй `AsyncStorage` напрямую — только MMKV через `utils/storage.ts`
+- Не хардкодь Instagram лимиты — только через `INSTAGRAM_LIMITS` константы
+- Не используй `text.length` для подсчёта Instagram символов
+- Не делай прямых HTTP запросов — нет бэкенда в v1.0
+- Не добавляй `console.log` в продакшн код
