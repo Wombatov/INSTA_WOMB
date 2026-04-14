@@ -35,8 +35,12 @@ export class RootErrorBoundary extends Component<Props, State> {
     if (error) {
       return (
         <View
-          className="flex-1 px-4 pt-16"
-          style={{ backgroundColor: Colors.bg.primary }}
+          style={{
+            flex: 1,
+            paddingHorizontal: 16,
+            paddingTop: 64,
+            backgroundColor: Colors.bg.primary,
+          }}
         >
           <Text
             style={{
@@ -75,8 +79,14 @@ export class RootErrorBoundary extends Component<Props, State> {
             onPress={this.handleRetry}
             accessibilityRole="button"
             accessibilityLabel="Повторить"
-            className="min-h-12 items-center justify-center rounded-xl py-3"
-            style={{ backgroundColor: Colors.accent.primary }}
+            style={{
+              minHeight: 48,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 12,
+              paddingVertical: 12,
+              backgroundColor: Colors.accent.primary,
+            }}
           >
             <Text style={{ color: '#FFFFFF', fontSize: 16 }}>Повторить</Text>
           </Pressable>

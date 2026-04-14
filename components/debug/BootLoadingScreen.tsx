@@ -6,9 +6,14 @@ import { Colors } from '@/constants/colors';
 export const BootLoadingScreen = memo(() => {
   return (
     <View
-      className="flex-1 items-center justify-center px-6"
-      style={{ backgroundColor: Colors.bg.primary }}
       accessibilityLabel="Загрузка приложения"
+      style={{
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 24,
+        backgroundColor: Colors.bg.primary,
+      }}
     >
       <ActivityIndicator size="large" color={Colors.accent.primary} />
       <Text

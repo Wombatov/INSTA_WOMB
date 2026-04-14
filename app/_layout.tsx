@@ -1,3 +1,5 @@
+import '../global.css';
+
 import {
   Syne_500Medium,
   Syne_700Bold,
@@ -26,6 +28,7 @@ import { StatusBar } from 'expo-status-bar';
 import { BootLoadingScreen } from '@/components/debug/BootLoadingScreen';
 import { RootErrorBoundary } from '@/components/debug/RootErrorBoundary';
 import { ToastProvider } from '@/components/ui/Toast';
+import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useSettingsStore } from '@/store/settingsStore';
 
@@ -39,7 +42,9 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView
+      style={{ flex: 1, backgroundColor: Colors.bg.primary }}
+    >
       <RootErrorBoundary>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <ToastProvider>
