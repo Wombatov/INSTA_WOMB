@@ -1,11 +1,12 @@
-import React, { memo, useCallback, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView,
+  Keyboard,
   Modal,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Platform,
   Pressable,
+  ScrollView,
   TextInput,
   useWindowDimensions,
   View,
@@ -19,7 +20,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Eye, FileText, Hash } from 'lucide-react-native';
 
 import { Colors } from '@/constants/colors';
@@ -180,10 +181,29 @@ OnboardingDot.displayName = 'OnboardingDot';
 
 export default function OnboardingScreen() {
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const scrollX = useSharedValue(0);
   const [slideIndex, setSlideIndex] = useState(0);
   const [usernameModalVisible, setUsernameModalVisible] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState('');
+  const [keyboardInset, setKeyboardInset] = useState(0);
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent =
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      setKeyboardInset(e.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardInset(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const settings = useSettingsStore((s) => s.settings);
   const updateSettings = useSettingsStore((s) => s.updateSettings);
@@ -290,10 +310,7 @@ export default function OnboardingScreen() {
         transparent
         onRequestClose={() => setUsernameModalVisible(false)}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1 justify-end"
-        >
+        <View className="flex-1 justify-end">
           <Pressable
             className="flex-1 bg-black/60"
             onPress={() => setUsernameModalVisible(false)}
@@ -301,44 +318,62 @@ export default function OnboardingScreen() {
             accessibilityRole="button"
           />
           <View
-            className="rounded-t-3xl px-6 pb-8 pt-6"
-            style={{ backgroundColor: Colors.bg.secondary }}
+            className="rounded-t-3xl"
+            style={{
+              marginBottom:
+                keyboardInset > 0
+                  ? keyboardInset
+                  : Math.max(insets.bottom, 12),
+              backgroundColor: Colors.bg.secondary,
+              maxHeight: '88%',
+            }}
           >
-            <AppText variant="sectionTitle" className="mb-2">
-              Имя в превью
-            </AppText>
-            <AppText
-              variant="caption"
-              color={Colors.text.secondary}
-              className="mb-4"
-            >
-              Как отображать имя в превью поста (можно изменить позже в
-              настройках).
-            </AppText>
-            <TextInput
-              value={usernameDraft}
-              onChangeText={setUsernameDraft}
-              placeholder="username"
-              placeholderTextColor={Colors.text.tertiary}
-              className="mb-6 min-h-12 rounded-xl px-3 py-2"
-              style={{
-                color: Colors.text.primary,
-                backgroundColor: Colors.bg.tertiary,
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+              contentContainerStyle={{
+                paddingHorizontal: 24,
+                paddingTop: 24,
+                paddingBottom: 24,
               }}
-              autoCapitalize="none"
-              autoCorrect={false}
-              autoFocus
-              accessibilityLabel="Имя пользователя для превью"
-              accessibilityHint="Отображается в карточке превью, как в Instagram"
-            />
-            <Button
-              label="Продолжить"
-              onPress={completeOnboarding}
-              variant="primary"
-              size="lg"
-            />
+            >
+              <AppText variant="sectionTitle" className="mb-2">
+                Имя в превью
+              </AppText>
+              <AppText
+                variant="caption"
+                color={Colors.text.secondary}
+                className="mb-4"
+              >
+                Как отображать имя в превью поста (можно изменить позже в
+                настройках).
+              </AppText>
+              <TextInput
+                value={usernameDraft}
+                onChangeText={setUsernameDraft}
+                placeholder="username"
+                placeholderTextColor={Colors.text.tertiary}
+                className="mb-6 min-h-12 rounded-xl px-3 py-2"
+                style={{
+                  color: Colors.text.primary,
+                  backgroundColor: Colors.bg.tertiary,
+                }}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus
+                accessibilityLabel="Имя пользователя для превью"
+                accessibilityHint="Отображается в карточке превью, как в Instagram"
+              />
+              <Button
+                label="Продолжить"
+                onPress={completeOnboarding}
+                variant="primary"
+                size="lg"
+              />
+            </ScrollView>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </Modal>
     </SafeAreaView>
   );

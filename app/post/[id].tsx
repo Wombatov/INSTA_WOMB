@@ -1,6 +1,12 @@
 import { type Href, router, Stack, useLocalSearchParams } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
-import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -25,6 +31,7 @@ import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useToast } from '@/hooks/useToast';
 import { usePostsStore } from '@/store/postsStore';
 import { hapticsDeleteHeavy, hapticsSaveSuccess } from '@/utils/haptics';
+import { insertFragmentAtSelection } from '@/utils/textInsert';
 
 const TEXT_INPUT_MIN = 200;
 const TEXT_INPUT_MAX = 420;
@@ -42,6 +49,7 @@ export default function EditPostScreen() {
 
   const post = posts.find((p) => p.id === id);
 
+  const inputRef = useRef<React.ElementRef<typeof TextInput> | null>(null);
   const [text, setText] = useState(post?.content ?? '');
   const [selection, setSelection] = useState({ start: 0, end: 0 });
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -144,6 +152,25 @@ export default function EditPostScreen() {
     } as unknown as Href);
   }, [id]);
 
+  const onQuickInsert = useCallback(
+    (fragment: string) => {
+      const { nextText, caret } = insertFragmentAtSelection(
+        text,
+        selection,
+        fragment
+      );
+      setText(nextText);
+      setSelection({ start: caret, end: caret });
+      requestAnimationFrame(() => {
+        inputRef.current?.setNativeProps({
+          selection: { start: caret, end: caret },
+        });
+        inputRef.current?.focus();
+      });
+    },
+    [selection, text]
+  );
+
   if (!post || !id) {
     return (
       <>
@@ -175,8 +202,8 @@ export default function EditPostScreen() {
         >
           <ScrollView
             className="flex-1"
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="interactive"
+            keyboardShouldPersistTaps="always"
+            keyboardDismissMode="none"
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{
               flexGrow: 1,
@@ -186,6 +213,7 @@ export default function EditPostScreen() {
             <View className="flex-1 px-4 pb-3">
               <View className="relative" style={{ minHeight: TEXT_INPUT_MIN }}>
                 <TextInput
+                  ref={inputRef}
                   className="rounded-xl px-3 py-3 text-[15px] leading-[22px]"
                   style={{
                     minHeight: TEXT_INPUT_MIN,
@@ -203,6 +231,7 @@ export default function EditPostScreen() {
                     setSelection(e.nativeEvent.selection)
                   }
                   scrollEnabled
+                  blurOnSubmit={false}
                 />
                 <View className="absolute bottom-2 right-2">
                   <CharCounter text={text} />
@@ -212,11 +241,7 @@ export default function EditPostScreen() {
               <TruncationMarker text={text} />
 
               <View className="my-2">
-                <QuickInsert
-                  text={text}
-                  selection={selection}
-                  onChangeText={setText}
-                />
+                <QuickInsert onInsert={onQuickInsert} />
               </View>
 
               <Pressable

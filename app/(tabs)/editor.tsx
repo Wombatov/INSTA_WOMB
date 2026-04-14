@@ -1,7 +1,7 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { type Href, router } from 'expo-router';
 import { Hash } from 'lucide-react-native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -25,12 +25,14 @@ import { useToast } from '@/hooks/useToast';
 import { usePostsStore } from '@/store/postsStore';
 import { usePreviewStore } from '@/store/previewStore';
 import { hapticsSaveSuccess } from '@/utils/haptics';
+import { insertFragmentAtSelection } from '@/utils/textInsert';
 
 const TEXT_INPUT_MIN = 200;
 const TEXT_INPUT_MAX = 420;
 
 export default function EditorScreen() {
   const tabBarHeight = useBottomTabBarHeight();
+  const inputRef = useRef<React.ElementRef<typeof TextInput> | null>(null);
   const [text, setText] = useState('');
   const [selection, setSelection] = useState({ start: 0, end: 0 });
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -62,6 +64,25 @@ export default function EditorScreen() {
     router.push('/post/preview' as Href);
   }, [setDraftCaption, text]);
 
+  const onQuickInsert = useCallback(
+    (fragment: string) => {
+      const { nextText, caret } = insertFragmentAtSelection(
+        text,
+        selection,
+        fragment
+      );
+      setText(nextText);
+      setSelection({ start: caret, end: caret });
+      requestAnimationFrame(() => {
+        inputRef.current?.setNativeProps({
+          selection: { start: caret, end: caret },
+        });
+        inputRef.current?.focus();
+      });
+    },
+    [selection, text]
+  );
+
   const scrollBottomPad = tabBarHeight + 28;
 
   return (
@@ -79,8 +100,8 @@ export default function EditorScreen() {
       >
         <ScrollView
           className="flex-1"
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="none"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             flexGrow: 1,
@@ -94,6 +115,7 @@ export default function EditorScreen() {
 
             <View className="relative" style={{ minHeight: TEXT_INPUT_MIN }}>
               <TextInput
+                ref={inputRef}
                 className="rounded-xl px-3 py-3 text-[15px] leading-[22px]"
                 style={{
                   minHeight: TEXT_INPUT_MIN,
@@ -111,6 +133,7 @@ export default function EditorScreen() {
                   setSelection(e.nativeEvent.selection)
                 }
                 scrollEnabled
+                blurOnSubmit={false}
               />
               <View className="absolute bottom-2 right-2">
                 <CharCounter text={text} />
@@ -120,11 +143,7 @@ export default function EditorScreen() {
             <TruncationMarker text={text} />
 
             <View className="my-2">
-              <QuickInsert
-                text={text}
-                selection={selection}
-                onChangeText={setText}
-              />
+              <QuickInsert onInsert={onQuickInsert} />
             </View>
 
             <Pressable
