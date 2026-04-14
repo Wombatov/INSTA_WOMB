@@ -281,7 +281,7 @@ export default function OnboardingScreen() {
           offset: width * index,
           index,
         })}
-        accessibilityLabel={`Знакомство с CaptionCraft, шаг ${slideIndex + 1} из ${SLIDES.length}`}
+        accessibilityLabel={`Знакомство с INstaWomb, шаг ${slideIndex + 1} из ${SLIDES.length}`}
         accessibilityHint="Проведите влево или вправо, чтобы перейти к следующему или предыдущему шагу"
       />
 

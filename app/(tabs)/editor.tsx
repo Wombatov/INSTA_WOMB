@@ -51,16 +51,20 @@ export default function EditorScreen() {
     }
     try {
       createPost(trimmed);
+      setDraftCaption(trimmed);
       setText('');
       void hapticsSaveSuccess();
       showToast({ message: 'Пост сохранён', variant: 'success' });
     } catch {
       showToast({ message: 'Не удалось сохранить пост', variant: 'error' });
     }
-  }, [createPost, showToast, text]);
+  }, [createPost, setDraftCaption, showToast, text]);
 
   const onPreview = useCallback(() => {
-    setDraftCaption(text);
+    const next = text.trim();
+    if (next.length > 0) {
+      setDraftCaption(next);
+    }
     router.push('/post/preview' as Href);
   }, [setDraftCaption, text]);
 

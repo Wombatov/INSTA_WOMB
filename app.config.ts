@@ -3,7 +3,7 @@ import type { ExpoConfig } from 'expo/config';
 /** `react-native-mmkv` подключён как зависимость; отдельный config plugin в текущей версии не требуется. */
 
 const config: ExpoConfig = {
-  name: 'CaptionCraft',
+  name: 'INstaWomb',
   slug: 'captioncraft',
   version: '1.0.0',
   orientation: 'portrait',
@@ -20,9 +20,8 @@ const config: ExpoConfig = {
     softwareKeyboardLayoutMode: 'resize',
     versionCode: 1,
     adaptiveIcon: {
-      backgroundColor: '#E6F4FE',
+      backgroundColor: '#1A1A1A',
       foregroundImage: './assets/images/android-icon-foreground.png',
-      backgroundImage: './assets/images/android-icon-background.png',
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     permissions: ['android.permission.VIBRATE'],

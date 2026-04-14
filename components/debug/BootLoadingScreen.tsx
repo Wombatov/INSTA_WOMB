@@ -24,7 +24,7 @@ export const BootLoadingScreen = memo(() => {
           textAlign: 'center',
         }}
       >
-        CaptionCraft
+        INstaWomb
       </Text>
       <Text
         style={{
