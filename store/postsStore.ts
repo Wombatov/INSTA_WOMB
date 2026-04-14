@@ -12,6 +12,46 @@ import { zustandPersistStorage } from '@/utils/storage';
 
 import { useSettingsStore } from './settingsStore';
 
+/** Чистая фильтрация/сортировка для UI — не использовать как zustand-селектор (новый массив каждый раз). */
+export function computeFilteredPosts(
+  posts: Post[],
+  searchQuery: string,
+  sortOrder: SortOrder
+): Post[] {
+  const q = searchQuery.trim().toLowerCase();
+  let list = posts.filter((post) => {
+    if (!q) {
+      return true;
+    }
+    return (
+      post.title.toLowerCase().includes(q) ||
+      post.content.toLowerCase().includes(q)
+    );
+  });
+
+  list = [...list];
+  switch (sortOrder) {
+    case 'newest':
+      list.sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+      break;
+    case 'oldest':
+      list.sort(
+        (a, b) =>
+          new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
+      );
+      break;
+    case 'alphabetical':
+      list.sort((a, b) =>
+        a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+      );
+      break;
+  }
+  return list;
+}
+
 function dedupeHashtagsInOrder(tags: string[]): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
@@ -128,40 +168,7 @@ export const usePostsStore = create<PostsState>()(
 
       filteredPosts: () => {
         const { posts, searchQuery, sortOrder } = get();
-        const q = searchQuery.trim().toLowerCase();
-        let list = posts.filter((post) => {
-          if (!q) {
-            return true;
-          }
-          return (
-            post.title.toLowerCase().includes(q) ||
-            post.content.toLowerCase().includes(q)
-          );
-        });
-
-        list = [...list];
-        switch (sortOrder) {
-          case 'newest':
-            list.sort(
-              (a, b) =>
-                new Date(b.updatedAt).getTime() -
-                new Date(a.updatedAt).getTime()
-            );
-            break;
-          case 'oldest':
-            list.sort(
-              (a, b) =>
-                new Date(a.updatedAt).getTime() -
-                new Date(b.updatedAt).getTime()
-            );
-            break;
-          case 'alphabetical':
-            list.sort((a, b) =>
-              a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
-            );
-            break;
-        }
-        return list;
+        return computeFilteredPosts(posts, searchQuery, sortOrder);
       },
     }),
     {

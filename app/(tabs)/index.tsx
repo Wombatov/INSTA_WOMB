@@ -4,6 +4,7 @@ import { ArrowUpDown } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useShallow } from 'zustand/shallow';
 
 import { Colors } from '@/constants/colors';
 import type { Post, SortOrder } from '@/types';
@@ -12,7 +13,7 @@ import { PostList } from '@/components/posts/PostList';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { AppText } from '@/components/ui/AppText';
 import { useToast } from '@/hooks/useToast';
-import { usePostsStore } from '@/store/postsStore';
+import { computeFilteredPosts, usePostsStore } from '@/store/postsStore';
 import { hapticsCopy, hapticsDeleteHeavy } from '@/utils/haptics';
 
 function nextSortOrder(current: SortOrder): SortOrder {
@@ -38,13 +39,26 @@ function sortLabel(order: SortOrder): string {
 }
 
 export default function HomeScreen() {
-  const searchQuery = usePostsStore((s) => s.searchQuery);
-  const setSearchQuery = usePostsStore((s) => s.setSearchQuery);
-  const sortOrder = usePostsStore((s) => s.sortOrder);
-  const setSortOrder = usePostsStore((s) => s.setSortOrder);
-  const allPosts = usePostsStore((s) => s.posts);
-  const posts = usePostsStore((s) => s.filteredPosts());
-  const deletePost = usePostsStore((s) => s.deletePost);
+  const { searchQuery, sortOrder, allPosts } = usePostsStore(
+    useShallow((s) => ({
+      searchQuery: s.searchQuery,
+      sortOrder: s.sortOrder,
+      allPosts: s.posts,
+    }))
+  );
+
+  const posts = useMemo(
+    () => computeFilteredPosts(allPosts, searchQuery, sortOrder),
+    [allPosts, searchQuery, sortOrder]
+  );
+
+  const setSearchQuery = useCallback((query: string) => {
+    usePostsStore.getState().setSearchQuery(query);
+  }, []);
+
+  const setSortOrder = useCallback((order: SortOrder) => {
+    usePostsStore.getState().setSortOrder(order);
+  }, []);
 
   const { showToast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
@@ -75,10 +89,10 @@ export default function HomeScreen() {
   const onPostDelete = useCallback(
     (post: Post) => {
       void hapticsDeleteHeavy();
-      deletePost(post.id);
+      usePostsStore.getState().deletePost(post.id);
       showToast({ message: 'Пост удалён', variant: 'info' });
     },
-    [deletePost, showToast]
+    [showToast]
   );
 
   const sortHint = useMemo(() => sortLabel(sortOrder), [sortOrder]);
