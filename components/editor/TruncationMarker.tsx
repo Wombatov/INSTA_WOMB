@@ -2,7 +2,10 @@ import React, { memo, useCallback } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Colors } from '@/constants/colors';
-import { countInstagramChars, INSTAGRAM_LIMITS } from '@/utils/instagramLimits';
+import {
+  countInstagramChars,
+  INSTAGRAM_LIMITS,
+} from '@/utils/instagramLimits';
 
 import { AppText } from '@/components/ui/AppText';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -13,32 +16,39 @@ export interface TruncationMarkerProps {
 
 export const TruncationMarker = memo<TruncationMarkerProps>(({ text }) => {
   const charLen = countInstagramChars(text);
-  const visible = charLen > INSTAGRAM_LIMITS.CAPTION_TRUNCATE;
+  const limit = INSTAGRAM_LIMITS.CAPTION_TRUNCATE;
   const tooltipSeen = useSettingsStore(
     (s) => s.settings.truncationMarkerTooltipSeen ?? false
   );
   const updateSettings = useSettingsStore((s) => s.updateSettings);
 
-  const showTooltipBubble = visible && !tooltipSeen;
-
   const dismissTooltip = useCallback(() => {
     updateSettings({ truncationMarkerTooltipSeen: true });
   }, [updateSettings]);
 
-  if (!visible) {
+  const showTooltipBubble = charLen > limit && !tooltipSeen;
+  const showFoldUi = charLen > 0;
+
+  if (!showFoldUi) {
     return null;
   }
+
+  const foldRatio = Math.min(charLen / limit, 1);
+  const overFold = charLen > limit;
 
   return (
     <View className="my-2">
       {showTooltipBubble ? (
         <View
-          className="mb-2 rounded-xl px-3 py-2"
-          style={{ backgroundColor: Colors.bg.elevated }}
+          className="mb-3 rounded-xl border px-3 py-2"
+          style={{
+            backgroundColor: Colors.bg.elevated,
+            borderColor: Colors.border.focus,
+          }}
         >
           <AppText variant="caption" color={Colors.text.secondary} className="mb-2">
-            В ленте Instagram после {INSTAGRAM_LIMITS.CAPTION_TRUNCATE} символов подпись
-            сворачивается с «ещё». Выше — зона, видимая без нажатия.
+            В ленте Instagram после {limit} символов подпись сворачивается с «ещё».
+            Полоса ниже показывает, какая доля текста уместится до «ещё».
           </AppText>
           <Pressable
             onPress={dismissTooltip}
@@ -53,22 +63,64 @@ export const TruncationMarker = memo<TruncationMarkerProps>(({ text }) => {
         </View>
       ) : null}
 
-      <View className="flex-row items-center gap-2">
+      <View className="mb-2">
+        <View className="mb-1 flex-row items-center justify-between">
+          <AppText variant="caption" color={Colors.text.secondary}>
+            В ленту без «ещё»
+          </AppText>
+          <AppText
+            variant="caption"
+            color={overFold ? Colors.status.warning : Colors.accent.light}
+          >
+            {charLen} / {limit}
+          </AppText>
+        </View>
         <View
-          className="h-px flex-1"
-          style={{ backgroundColor: Colors.accent.primary, opacity: 0.5 }}
+          className="h-2 overflow-hidden rounded-full"
+          style={{ backgroundColor: Colors.bg.tertiary }}
+          accessibilityRole="progressbar"
+          accessibilityValue={{
+            min: 0,
+            max: limit,
+            now: Math.min(charLen, limit),
+            text: `${Math.min(charLen, limit)} из ${limit} символов до свёртки`,
+          }}
+        >
+          <View
+            className="h-full rounded-full"
+            style={{
+              width: `${foldRatio * 100}%`,
+              backgroundColor: overFold
+                ? Colors.status.warning
+                : Colors.accent.primary,
+            }}
+          />
+        </View>
+        {overFold ? (
+          <AppText variant="caption" color={Colors.status.warning} className="mt-1">
+            Лимит «ещё» пройден — в ленте текст после {limit}-го символа скрыт
+          </AppText>
+        ) : null}
+      </View>
+
+      <View
+        className="flex-row items-center gap-2 py-1"
+        style={{ opacity: overFold ? 1 : 0.85 }}
+      >
+        <View
+          className="flex-1"
+          style={{ height: 2, backgroundColor: Colors.accent.light }}
         />
         <AppText
-          variant="caption"
-          color={Colors.accent.primary}
-          style={{ opacity: 0.5 }}
+          variant="label"
+          color={Colors.text.primary}
           accessibilityRole="text"
         >
-          ──── 👁 видно без &apos;ещё&apos; ────
+          👁 видно без «ещё»
         </AppText>
         <View
-          className="h-px flex-1"
-          style={{ backgroundColor: Colors.accent.primary, opacity: 0.5 }}
+          className="flex-1"
+          style={{ height: 2, backgroundColor: Colors.accent.light }}
         />
       </View>
     </View>

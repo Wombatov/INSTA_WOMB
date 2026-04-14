@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
 
 import type { HashtagSet } from '@/types';
+import { createId } from '@/utils/createId';
 import { zustandPersistStorage } from '@/utils/storage';
 
 interface HashtagsState {
@@ -20,7 +20,7 @@ export const useHashtagsStore = create<HashtagsState>()(
         set((state) => ({
           sets: [
             {
-              id: uuidv4(),
+              id: createId(),
               name,
               hashtags,
               createdAt: new Date().toISOString(),

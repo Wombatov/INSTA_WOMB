@@ -6,10 +6,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useNavigation } from '@react-navigation/native';
 
@@ -25,11 +26,15 @@ import { useToast } from '@/hooks/useToast';
 import { usePostsStore } from '@/store/postsStore';
 import { hapticsDeleteHeavy, hapticsSaveSuccess } from '@/utils/haptics';
 
+const TEXT_INPUT_MIN = 200;
+const TEXT_INPUT_MAX = 420;
+
 export default function EditPostScreen() {
   const { id: rawId } = useLocalSearchParams<{ id: string }>();
   const id = typeof rawId === 'string' ? rawId : rawId?.[0];
   const navigation = useNavigation();
   const headerHeight = useHeaderHeight();
+  const insets = useSafeAreaInsets();
 
   const posts = usePostsStore((s) => s.posts);
   const updatePost = usePostsStore((s) => s.updatePost);
@@ -120,9 +125,13 @@ export default function EditPostScreen() {
       showToast({ message: 'Текст не может быть пустым', variant: 'error' });
       return;
     }
-    updatePost(id, { content: trimmed });
-    void hapticsSaveSuccess();
-    showToast({ message: 'Изменения сохранены', variant: 'success' });
+    try {
+      updatePost(id, { content: trimmed });
+      void hapticsSaveSuccess();
+      showToast({ message: 'Изменения сохранены', variant: 'success' });
+    } catch {
+      showToast({ message: 'Не удалось сохранить пост', variant: 'error' });
+    }
   }, [id, post, showToast, text, updatePost]);
 
   const onPreview = useCallback(() => {
@@ -159,87 +168,100 @@ export default function EditPostScreen() {
       >
         <KeyboardAvoidingView
           className="flex-1"
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
           keyboardVerticalOffset={
             Platform.OS === 'ios' ? headerHeight + 8 : 0
           }
         >
-          <View className="flex-1 px-4 pb-3">
-            <View className="relative min-h-[160px] flex-1">
-              <TextInput
-                className="flex-1 rounded-xl px-3 py-3 text-[15px] leading-[22px]"
-                style={{
-                  color: Colors.text.primary,
-                  backgroundColor: Colors.bg.secondary,
-                  textAlignVertical: 'top',
-                }}
-                placeholder="Текст подписи…"
-                placeholderTextColor={Colors.text.tertiary}
-                multiline
-                value={text}
-                onChangeText={setText}
-                onSelectionChange={(e) =>
-                  setSelection(e.nativeEvent.selection)
-                }
-                scrollEnabled
-              />
-              <View className="absolute bottom-2 right-2">
-                <CharCounter text={text} />
-              </View>
-            </View>
-
-            <TruncationMarker text={text} />
-
-            <View className="my-2">
-              <QuickInsert
-                text={text}
-                selection={selection}
-                onChangeText={setText}
-              />
-            </View>
-
-            <Pressable
-              onPress={() => setPickerOpen(true)}
-              className="mb-3 min-h-12 flex-row items-center justify-center gap-2 rounded-xl px-3"
-              style={{ backgroundColor: Colors.bg.secondary }}
-              accessibilityRole="button"
-              accessibilityLabel="Хэштеги"
-            >
-              <AppText variant="bodyMedium" color={Colors.accent.primary}>
-                # Хэштеги
-              </AppText>
-            </Pressable>
-
-            <View className="flex-row flex-wrap gap-2">
-              <View className="min-w-[30%] flex-1">
-                <Button
-                  label="Превью"
-                  onPress={onPreview}
-                  variant="secondary"
-                  size="sm"
-                />
-              </View>
-              <View className="min-w-[30%] flex-1">
-                <Button
-                  label="Сохранить изменения"
-                  onPress={onSave}
-                  variant="primary"
-                  size="sm"
-                />
-              </View>
-              <View className="min-w-[30%] flex-1">
-                <Button
-                  label={isCopied ? 'Скопировано' : 'Копировать'}
-                  onPress={() => {
-                    void copy();
+          <ScrollView
+            className="flex-1"
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingBottom: insets.bottom + 24,
+            }}
+          >
+            <View className="flex-1 px-4 pb-3">
+              <View className="relative" style={{ minHeight: TEXT_INPUT_MIN }}>
+                <TextInput
+                  className="rounded-xl px-3 py-3 text-[15px] leading-[22px]"
+                  style={{
+                    minHeight: TEXT_INPUT_MIN,
+                    maxHeight: TEXT_INPUT_MAX,
+                    color: Colors.text.primary,
+                    backgroundColor: Colors.bg.secondary,
+                    textAlignVertical: 'top',
                   }}
-                  variant="ghost"
-                  size="sm"
-                  disabled={text.trim().length === 0}
+                  placeholder="Текст подписи…"
+                  placeholderTextColor={Colors.text.tertiary}
+                  multiline
+                  value={text}
+                  onChangeText={setText}
+                  onSelectionChange={(e) =>
+                    setSelection(e.nativeEvent.selection)
+                  }
+                  scrollEnabled
+                />
+                <View className="absolute bottom-2 right-2">
+                  <CharCounter text={text} />
+                </View>
+              </View>
+
+              <TruncationMarker text={text} />
+
+              <View className="my-2">
+                <QuickInsert
+                  text={text}
+                  selection={selection}
+                  onChangeText={setText}
                 />
               </View>
+
+              <Pressable
+                onPress={() => setPickerOpen(true)}
+                className="mb-3 min-h-12 flex-row items-center justify-center gap-2 rounded-xl px-3"
+                style={{ backgroundColor: Colors.bg.secondary }}
+                accessibilityRole="button"
+                accessibilityLabel="Хэштеги"
+              >
+                <AppText variant="bodyMedium" color={Colors.accent.primary}>
+                  # Хэштеги
+                </AppText>
+              </Pressable>
+
+              <View className="flex-row flex-wrap gap-2">
+                <View className="min-w-[30%] flex-1">
+                  <Button
+                    label="Превью"
+                    onPress={onPreview}
+                    variant="secondary"
+                    size="sm"
+                  />
+                </View>
+                <View className="min-w-[30%] flex-1">
+                  <Button
+                    label="Сохранить изменения"
+                    onPress={onSave}
+                    variant="primary"
+                    size="sm"
+                  />
+                </View>
+                <View className="min-w-[30%] flex-1">
+                  <Button
+                    label={isCopied ? 'Скопировано' : 'Копировать'}
+                    onPress={() => {
+                      void copy();
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    disabled={text.trim().length === 0}
+                  />
+                </View>
+              </View>
             </View>
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
 

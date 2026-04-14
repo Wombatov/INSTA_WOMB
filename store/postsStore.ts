@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
 
 import type { Post, SortOrder } from '@/types';
+import { createId } from '@/utils/createId';
 import {
   countInstagramChars,
   extractHashtags,
@@ -68,7 +68,7 @@ function buildPostFromContent(content: string, status: Post['status']): Post {
   const now = new Date().toISOString();
   const hashtags = dedupeHashtagsInOrder(extractHashtags(content));
   const post: Post = {
-    id: uuidv4(),
+    id: createId(),
     title: generatePostTitle(content),
     content,
     hashtags,

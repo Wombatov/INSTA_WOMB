@@ -16,6 +16,8 @@ const config: ExpoConfig = {
   },
   android: {
     package: 'com.captioncraft.app',
+    /** Клавиатура уменьшает окно — кнопки редактора остаются доступны при ScrollView. */
+    softwareKeyboardLayoutMode: 'resize',
     versionCode: 1,
     adaptiveIcon: {
       backgroundColor: '#E6F4FE',
