@@ -23,6 +23,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 import { StatusBar } from 'expo-status-bar';
 
+import { BootLoadingScreen } from '@/components/debug/BootLoadingScreen';
+import { RootErrorBoundary } from '@/components/debug/RootErrorBoundary';
 import { ToastProvider } from '@/components/ui/Toast';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useSettingsStore } from '@/store/settingsStore';
@@ -38,12 +40,14 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <ToastProvider>
-          <RootNavigation />
-          <StatusBar style="auto" />
-        </ToastProvider>
-      </ThemeProvider>
+      <RootErrorBoundary>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <ToastProvider>
+            <RootNavigation />
+            <StatusBar style="auto" />
+          </ToastProvider>
+        </ThemeProvider>
+      </RootErrorBoundary>
     </GestureHandlerRootView>
   );
 }
@@ -63,17 +67,21 @@ function RootNavigation() {
   );
 
   useEffect(() => {
-    const unsub = useSettingsStore.persist.onFinishHydration(() => {
+    const finish = (): void => {
       setHydrated(true);
-    });
+    };
+    const unsub = useSettingsStore.persist.onFinishHydration(finish);
+    if (useSettingsStore.persist.hasHydrated()) {
+      finish();
+    }
     return unsub;
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded && hydrated) {
-      SplashScreen.hideAsync();
+    if (fontsLoaded) {
+      void SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, hydrated]);
+  }, [fontsLoaded]);
 
   const onboardingComplete = useSettingsStore(
     (s) => s.settings.onboardingComplete ?? false
@@ -103,7 +111,7 @@ function RootNavigation() {
   ]);
 
   if (!fontsLoaded || !hydrated) {
-    return null;
+    return <BootLoadingScreen />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;
