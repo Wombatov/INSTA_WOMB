@@ -1,11 +1,11 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Dimensions,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   TextInput,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,8 +18,6 @@ import { useToast } from '@/hooks/useToast';
 import { useTemplatesStore } from '@/store/templatesStore';
 import { extractVariables } from '@/utils/templateParser';
 import { hapticsSaveSuccess } from '@/utils/haptics';
-
-const WINDOW_H = Dimensions.get('window').height;
 
 function scrollSheetToContentEnd(scrollRef: React.RefObject<ScrollView | null>): void {
   requestAnimationFrame(() => {
@@ -38,6 +36,7 @@ export const TemplateEditorSheet = memo<TemplateEditorSheetProps>(
   ({ isVisible, onClose }) => {
     const theme = useThemeColors();
     const insets = useSafeAreaInsets();
+    const { height: windowHeight } = useWindowDimensions();
     const keyboardInset = useKeyboardInset();
     const createTemplate = useTemplatesStore((s) => s.createTemplate);
     const { showToast } = useToast();
@@ -82,16 +81,17 @@ export const TemplateEditorSheet = memo<TemplateEditorSheetProps>(
       onClose();
     }, [content, createTemplate, name, onClose, showToast]);
 
-    const sheetMax = WINDOW_H * 0.75;
     const sheetTitleReserve = 76;
     const footerBlock = 92;
     const keyboardOpen = keyboardInset > 0;
-    /** Без этого bodyCap + margin снизу превышали высоту шита — нижнее поле обрезалось и не скроллилось над клавиатурой */
-    const bodyCap = Math.max(
-      keyboardOpen ? 160 : 220,
-      sheetMax - sheetTitleReserve - (keyboardOpen ? keyboardInset : 0)
+    const innerH = Math.max(0, windowHeight - keyboardInset);
+    /** Согласовано с BottomSheet: высота шита над IME, не фиксированное окно */
+    const approxSheetH = Math.min(
+      windowHeight * 0.75,
+      keyboardOpen ? Math.max(220, innerH - 12) : windowHeight * 0.75
     );
-    const scrollMax = Math.max(120, bodyCap - footerBlock);
+    const bodyCap = Math.max(keyboardOpen ? 160 : 220, approxSheetH - sheetTitleReserve);
+    const scrollMax = Math.max(100, bodyCap - footerBlock);
 
     return (
       <BottomSheet isVisible={isVisible} onClose={onClose} title="Новый шаблон">

@@ -14,6 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useThemeColors } from '@/hooks/use-theme-colors';
+import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 
 import { AppText } from './AppText';
 
@@ -32,11 +33,21 @@ export const BottomSheet = memo<BottomSheetProps>(
   ({ isVisible, onClose, children, title }) => {
     const theme = useThemeColors();
     const insets = useSafeAreaInsets();
-    const { height } = useWindowDimensions();
+    const { height: windowHeight } = useWindowDimensions();
+    const keyboardInset = useKeyboardInset();
     const translateY = useSharedValue(SCREEN_H);
     const backdropOpacity = useSharedValue(0);
 
-    const sheetMaxHeight = Math.min(SCREEN_H * 0.75, height * 0.75);
+    /**
+     * Modal на Android не участвует в softwareKeyboardLayoutMode — шит остаётся у нижнего края,
+     * IME перекрывает поля. Поднимаем контент: padding снизу + maxHeight не выше области над клавиатурой.
+     */
+    const innerHeight = Math.max(0, windowHeight - keyboardInset);
+    const sheetMaxHeight = Math.min(
+      SCREEN_H * 0.75,
+      windowHeight * 0.75,
+      keyboardInset > 0 ? Math.max(220, innerHeight - 12) : SCREEN_H * 0.75
+    );
     const hiddenOffset = sheetMaxHeight + 48;
 
     useEffect(() => {
@@ -68,7 +79,10 @@ export const BottomSheet = memo<BottomSheetProps>(
         animationType="none"
         onRequestClose={handleRequestClose}
       >
-        <View className="flex-1 justify-end">
+        <View
+          className="flex-1 justify-end"
+          style={{ paddingBottom: keyboardInset }}
+        >
           <Pressable
             className="absolute inset-0"
             onPress={onClose}
