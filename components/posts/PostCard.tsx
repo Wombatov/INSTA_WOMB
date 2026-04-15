@@ -7,8 +7,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-import { Colors } from '@/constants/colors';
 import { TextStyles } from '@/constants/typography';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { Post } from '@/types';
 import { formatRelativePostDate } from '@/utils/relativeTime';
 import { INSTAGRAM_LIMITS } from '@/utils/instagramLimits';
@@ -26,6 +26,7 @@ const SPRING = { damping: 18, stiffness: 320 };
 
 export const PostCard = memo<PostCardProps>(
   ({ post, onPress, onCopy, onDelete: _onDelete }) => {
+    const theme = useThemeColors();
     const scale = useSharedValue(1);
 
     const animatedStyle = useAnimatedStyle(() => ({
@@ -45,7 +46,7 @@ export const PostCard = memo<PostCardProps>(
     const badgeBg = isDraft
       ? 'rgba(234, 179, 8, 0.22)'
       : 'rgba(34, 197, 94, 0.22)';
-    const badgeFg = isDraft ? '#FACC15' : Colors.status.ok;
+    const badgeFg = isDraft ? '#FACC15' : theme.status.ok;
 
     const dateLabel = formatRelativePostDate(post.updatedAt);
 
@@ -56,7 +57,7 @@ export const PostCard = memo<PostCardProps>(
         className="rounded-xl px-3 py-3"
         style={[
           animatedStyle,
-          { backgroundColor: Colors.bg.secondary, minHeight: 80 },
+          { backgroundColor: theme.bg.secondary, minHeight: 80 },
         ]}
       >
         <View className="mb-2 flex-row items-center gap-2">
@@ -69,7 +70,7 @@ export const PostCard = memo<PostCardProps>(
             </AppText>
           </View>
           <View className="min-w-0 flex-1" />
-          <AppText variant="caption" color={Colors.text.tertiary}>
+          <AppText variant="caption" color={theme.text.tertiary}>
             {dateLabel}
           </AppText>
           <Pressable
@@ -78,7 +79,7 @@ export const PostCard = memo<PostCardProps>(
             accessibilityLabel="Копировать текст поста"
             className="min-h-12 min-w-12 items-center justify-center"
           >
-            <Copy size={18} color={Colors.text.secondary} strokeWidth={1.8} />
+            <Copy size={18} color={theme.text.secondary} strokeWidth={1.8} />
           </Pressable>
         </View>
 
@@ -91,7 +92,7 @@ export const PostCard = memo<PostCardProps>(
         >
           <Text
             className="mb-2 text-[15px] leading-[22px]"
-            style={{ color: Colors.text.primary }}
+            style={{ color: theme.text.primary }}
             numberOfLines={2}
             ellipsizeMode="tail"
           >
@@ -101,20 +102,20 @@ export const PostCard = memo<PostCardProps>(
           <View className="flex-row items-center gap-2">
             <View
               className="rounded-md px-2 py-0.5"
-              style={{ backgroundColor: Colors.bg.tertiary }}
+              style={{ backgroundColor: theme.bg.tertiary }}
             >
-              <Text style={[TextStyles.counter, { color: Colors.text.secondary }]}>
+              <Text style={[TextStyles.counter, { color: theme.text.secondary }]}>
                 #{post.hashtagCount}/{INSTAGRAM_LIMITS.HASHTAG_MAX}
               </Text>
             </View>
-            <AppText variant="caption" color={Colors.text.tertiary}>
+            <AppText variant="caption" color={theme.text.tertiary}>
               ·
             </AppText>
             <View
               className="rounded-md px-2 py-0.5"
-              style={{ backgroundColor: Colors.bg.tertiary }}
+              style={{ backgroundColor: theme.bg.tertiary }}
             >
-              <Text style={[TextStyles.counter, { color: Colors.text.secondary }]}>
+              <Text style={[TextStyles.counter, { color: theme.text.secondary }]}>
                 {post.charCount}/{INSTAGRAM_LIMITS.CAPTION_MAX}
               </Text>
             </View>

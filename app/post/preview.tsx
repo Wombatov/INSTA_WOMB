@@ -7,16 +7,16 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
-
 import { InstagramCard } from '@/components/preview/InstagramCard';
 import { AppText } from '@/components/ui/AppText';
 import { useToast } from '@/hooks/useToast';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { usePostsStore } from '@/store/postsStore';
 import { usePreviewStore } from '@/store/previewStore';
 import { hapticsCopy } from '@/utils/haptics';
 
 export default function PostPreviewScreen() {
+  const theme = useThemeColors();
   const insets = useSafeAreaInsets();
   const { postId } = useLocalSearchParams<{ postId?: string }>();
   const id = typeof postId === 'string' ? postId : postId?.[0];
@@ -47,7 +47,7 @@ export default function PostPreviewScreen() {
       <Stack.Screen options={{ title: 'Превью', headerBackTitle: 'Назад' }} />
       <SafeAreaView
         className="flex-1"
-        style={{ backgroundColor: Colors.bg.primary }}
+        style={{ backgroundColor: theme.bg.primary }}
         edges={['bottom']}
       >
         <ScrollView
@@ -61,7 +61,7 @@ export default function PostPreviewScreen() {
                 void copyCaption();
               }}
               className="min-h-12 items-center justify-center rounded-xl py-3"
-              style={{ backgroundColor: Colors.accent.primary }}
+              style={{ backgroundColor: theme.accent.primary }}
               accessibilityRole="button"
               accessibilityLabel="Копировать подпись"
             >

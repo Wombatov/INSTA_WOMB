@@ -8,8 +8,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-import { Colors } from '@/constants/colors';
 import type { HashtagSet } from '@/types';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { AppText } from '@/components/ui/AppText';
 import { hapticsDeleteHeavy } from '@/utils/haptics';
 import { formatHashtags } from '@/utils/textFormatter';
@@ -30,6 +30,7 @@ function previewFive(set: HashtagSet): string {
 
 export const SwipeableHashtagSetCard = memo<SwipeableHashtagSetCardProps>(
   ({ item, onPress, onDelete }) => {
+    const theme = useThemeColors();
     const translateX = useSharedValue(0);
     const startX = useSharedValue(0);
 
@@ -102,9 +103,9 @@ export const SwipeableHashtagSetCard = memo<SwipeableHashtagSetCardProps>(
             accessibilityRole="button"
             accessibilityLabel={`Удалить набор ${item.name}`}
             className="h-full w-full items-center justify-center rounded-xl"
-            style={{ backgroundColor: Colors.status.error }}
+            style={{ backgroundColor: theme.status.error }}
           >
-            <Trash2 size={24} color={Colors.text.primary} strokeWidth={1.8} />
+            <Trash2 size={24} color={theme.text.primary} strokeWidth={1.8} />
           </Pressable>
         </View>
 
@@ -113,23 +114,23 @@ export const SwipeableHashtagSetCard = memo<SwipeableHashtagSetCardProps>(
             <Pressable
               onPress={() => onPress(item)}
               className="rounded-xl px-4 py-3"
-              style={{ backgroundColor: Colors.bg.secondary }}
+              style={{ backgroundColor: theme.bg.secondary }}
               accessibilityRole="button"
               accessibilityLabel={`Редактировать набор ${item.name}, ${countLabel}`}
             >
               <AppText
                 variant="bodyMedium"
-                color={Colors.text.primary}
+                color={theme.text.primary}
                 className="mb-1"
               >
                 {item.name}
               </AppText>
-              <AppText variant="caption" color={Colors.text.secondary} className="mb-2">
+              <AppText variant="caption" color={theme.text.secondary} className="mb-2">
                 {countLabel}
               </AppText>
               <AppText
                 variant="caption"
-                color={Colors.text.tertiary}
+                color={theme.text.tertiary}
                 numberOfLines={2}
               >
                 {preview.length > 0 ? preview : '—'}

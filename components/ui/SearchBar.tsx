@@ -1,5 +1,7 @@
 import React, { memo, useCallback, useMemo } from 'react';
-import { Pressable, TextInput, useColorScheme, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
+
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Search, X } from 'lucide-react-native';
 
 import { Colors } from '@/constants/colors';

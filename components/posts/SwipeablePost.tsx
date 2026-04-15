@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-import { Colors } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { Post } from '@/types';
 
 import { PostCard, type PostCardProps } from './PostCard';
@@ -24,6 +24,7 @@ export interface SwipeablePostProps
 
 export const SwipeablePost = memo<SwipeablePostProps>(
   ({ post, onPress, onCopy, onDelete }) => {
+    const theme = useThemeColors();
     const translateX = useSharedValue(0);
     const startX = useSharedValue(0);
 
@@ -73,7 +74,7 @@ export const SwipeablePost = memo<SwipeablePostProps>(
               translateX.value = withSpring(0, SPRING);
             }
           }),
-      []
+      [startX, translateX]
     );
 
     const animatedStyle = useAnimatedStyle(() => ({
@@ -92,9 +93,9 @@ export const SwipeablePost = memo<SwipeablePostProps>(
             accessibilityRole="button"
             accessibilityLabel="Удалить пост"
             className="h-full w-full items-center justify-center rounded-xl"
-            style={{ backgroundColor: Colors.status.error }}
+            style={{ backgroundColor: theme.status.error }}
           >
-            <Trash2 size={24} color={Colors.text.primary} strokeWidth={1.8} />
+            <Trash2 size={24} color={theme.text.primary} strokeWidth={1.8} />
           </Pressable>
         </View>
 

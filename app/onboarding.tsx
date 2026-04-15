@@ -25,6 +25,7 @@ import { Eye, FileText, Hash } from 'lucide-react-native';
 
 import { Colors } from '@/constants/colors';
 import { AppText } from '@/components/ui/AppText';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { Button } from '@/components/ui/Button';
 import { useSettingsStore } from '@/store/settingsStore';
 import { INSTAGRAM_LIMITS } from '@/utils/instagramLimits';
@@ -81,6 +82,7 @@ const OnboardingSlide = memo(
     scrollX: SharedValue<number>;
     width: number;
   }) => {
+    const theme = useThemeColors();
     const { Icon, iconSize } = item;
     const animatedStyle = useAnimatedStyle(() => {
       const inputRange = [
@@ -112,7 +114,7 @@ const OnboardingSlide = memo(
           <View accessibilityElementsHidden importantForAccessibility="no">
             <Icon
               size={iconSize}
-              color={Colors.accent.primary}
+              color={theme.accent.primary}
               strokeWidth={1.8}
             />
           </View>
@@ -125,7 +127,7 @@ const OnboardingSlide = memo(
           </AppText>
           <AppText
             variant="body"
-            color={Colors.text.secondary}
+            color={theme.text.secondary}
             className="mt-4 text-center"
           >
             {item.body}
@@ -180,6 +182,7 @@ const OnboardingDot = memo(
 OnboardingDot.displayName = 'OnboardingDot';
 
 export default function OnboardingScreen() {
+  const theme = useThemeColors();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const scrollX = useSharedValue(0);
@@ -255,7 +258,7 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ backgroundColor: Colors.bg.primary }}
+      style={{ backgroundColor: theme.bg.primary }}
       edges={['top', 'bottom']}
     >
       <AnimatedFlatList
@@ -324,7 +327,7 @@ export default function OnboardingScreen() {
                 keyboardInset > 0
                   ? keyboardInset
                   : Math.max(insets.bottom, 12),
-              backgroundColor: Colors.bg.secondary,
+              backgroundColor: theme.bg.secondary,
               maxHeight: '88%',
             }}
           >
@@ -343,7 +346,7 @@ export default function OnboardingScreen() {
               </AppText>
               <AppText
                 variant="caption"
-                color={Colors.text.secondary}
+                color={theme.text.secondary}
                 className="mb-4"
               >
                 Как отображать имя в превью поста (можно изменить позже в
@@ -353,11 +356,11 @@ export default function OnboardingScreen() {
                 value={usernameDraft}
                 onChangeText={setUsernameDraft}
                 placeholder="username"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={theme.text.tertiary}
                 className="mb-6 min-h-12 rounded-xl px-3 py-2"
                 style={{
-                  color: Colors.text.primary,
-                  backgroundColor: Colors.bg.tertiary,
+                  color: theme.text.primary,
+                  backgroundColor: theme.bg.tertiary,
                 }}
                 autoCapitalize="none"
                 autoCorrect={false}

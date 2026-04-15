@@ -2,7 +2,7 @@ import { router, type Href } from 'expo-router';
 import React, { memo, useCallback, useMemo } from 'react';
 import { FlatList, Pressable, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { HashtagSet } from '@/types';
 import { formatHashtags } from '@/utils/textFormatter';
 
@@ -42,6 +42,7 @@ function previewLine(set: HashtagSet): string {
 
 export const HashtagSetPicker = memo<HashtagSetPickerProps>(
   ({ isVisible, onClose, postText, onChangePostText }) => {
+    const theme = useThemeColors();
     const sets = useHashtagsStore((s) => s.sets);
 
     const sortedSets = useMemo(
@@ -67,19 +68,19 @@ export const HashtagSetPicker = memo<HashtagSetPickerProps>(
         <Pressable
           onPress={() => onPickSet(item)}
           className="mb-2 rounded-xl px-3 py-3"
-          style={{ backgroundColor: Colors.bg.secondary }}
+          style={{ backgroundColor: theme.bg.secondary }}
           accessibilityRole="button"
           accessibilityLabel={`Вставить набор ${item.name}`}
         >
-          <AppText variant="bodyMedium" color={Colors.text.primary} className="mb-1">
+          <AppText variant="bodyMedium" color={theme.text.primary} className="mb-1">
             {item.name}
           </AppText>
-          <AppText variant="caption" color={Colors.text.secondary} numberOfLines={2}>
+          <AppText variant="caption" color={theme.text.secondary} numberOfLines={2}>
             {previewLine(item)}
           </AppText>
         </Pressable>
       ),
-      [onPickSet]
+      [onPickSet, theme]
     );
 
     const keyExtractor = useCallback((item: HashtagSet) => item.id, []);
@@ -93,7 +94,7 @@ export const HashtagSetPicker = memo<HashtagSetPickerProps>(
           style={{ maxHeight: 400 }}
           nestedScrollEnabled
           ListEmptyComponent={
-            <AppText variant="body" color={Colors.text.secondary} className="py-4 text-center">
+            <AppText variant="body" color={theme.text.secondary} className="py-4 text-center">
               Пока нет сохранённых наборов
             </AppText>
           }
@@ -102,11 +103,11 @@ export const HashtagSetPicker = memo<HashtagSetPickerProps>(
               <Pressable
                 onPress={goNewSet}
                 className="min-h-12 items-center justify-center rounded-xl py-3"
-                style={{ backgroundColor: Colors.accent.subtle }}
+                style={{ backgroundColor: theme.accent.subtle }}
                 accessibilityRole="button"
                 accessibilityLabel="Создать новый набор хэштегов"
               >
-                <AppText variant="bodyMedium" color={Colors.accent.light}>
+                <AppText variant="bodyMedium" color={theme.accent.light}>
                   + Новый набор
                 </AppText>
               </Pressable>

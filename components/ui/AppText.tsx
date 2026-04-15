@@ -1,5 +1,7 @@
 import React, { memo } from 'react';
-import { Text, useColorScheme, type TextProps, type TextStyle } from 'react-native';
+import { Text, type TextProps, type TextStyle } from 'react-native';
+
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { Colors } from '@/constants/colors';
 import { TextStyles } from '@/constants/typography';

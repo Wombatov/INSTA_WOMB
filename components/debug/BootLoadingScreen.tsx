@@ -1,9 +1,10 @@
 import React, { memo } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 
 export const BootLoadingScreen = memo(() => {
+  const theme = useThemeColors();
   return (
     <View
       accessibilityLabel="Загрузка приложения"
@@ -12,14 +13,14 @@ export const BootLoadingScreen = memo(() => {
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 24,
-        backgroundColor: Colors.bg.primary,
+        backgroundColor: theme.bg.primary,
       }}
     >
-      <ActivityIndicator size="large" color={Colors.accent.primary} />
+      <ActivityIndicator size="large" color={theme.accent.primary} />
       <Text
         style={{
           marginTop: 20,
-          color: Colors.text.secondary,
+          color: theme.text.secondary,
           fontSize: 16,
           textAlign: 'center',
         }}
@@ -29,7 +30,7 @@ export const BootLoadingScreen = memo(() => {
       <Text
         style={{
           marginTop: 8,
-          color: Colors.text.tertiary,
+          color: theme.text.tertiary,
           fontSize: 13,
           textAlign: 'center',
         }}

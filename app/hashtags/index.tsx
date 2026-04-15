@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Plus } from 'lucide-react-native';
 
-import { Colors } from '@/constants/colors';
 import type { HashtagSet } from '@/types';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { HashtagSetEditorSheet } from '@/components/hashtags/HashtagSetEditorSheet';
 import { SwipeableHashtagSetCard } from '@/components/hashtags/SwipeableHashtagSetCard';
 import { AppText } from '@/components/ui/AppText';
@@ -16,6 +16,7 @@ export const options = {
 };
 
 export default function HashtagsScreen() {
+  const theme = useThemeColors();
   const router = useRouter();
   const sets = useHashtagsStore((s) => s.sets);
   const deleteSet = useHashtagsStore((s) => s.deleteSet);
@@ -68,7 +69,7 @@ export default function HashtagsScreen() {
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ backgroundColor: Colors.bg.primary }}
+      style={{ backgroundColor: theme.bg.primary }}
       edges={['top']}
     >
       <View className="flex-row items-center px-4 pb-3 pt-1">
@@ -82,7 +83,7 @@ export default function HashtagsScreen() {
             >
               <ChevronLeft
                 size={28}
-                color={Colors.text.primary}
+                color={theme.text.primary}
                 strokeWidth={1.8}
               />
             </Pressable>
@@ -102,7 +103,7 @@ export default function HashtagsScreen() {
             accessibilityLabel="Добавить набор хэштегов"
             className="min-h-12 min-w-12 items-center justify-center"
           >
-            <Plus size={26} color={Colors.accent.primary} strokeWidth={2} />
+            <Plus size={26} color={theme.accent.primary} strokeWidth={2} />
           </Pressable>
         </View>
       </View>
@@ -122,7 +123,7 @@ export default function HashtagsScreen() {
             <View className="flex-1 justify-center py-16">
               <AppText
                 variant="body"
-                color={Colors.text.secondary}
+                color={theme.text.secondary}
                 className="text-center"
               >
                 Нет наборов хэштегов

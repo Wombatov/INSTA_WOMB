@@ -8,23 +8,26 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Colors } from '@/constants/colors';
 import type { CaptionCharStatus } from '@/hooks/useCharCounter';
 import { useCharCounter } from '@/hooks/useCharCounter';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { INSTAGRAM_LIMITS } from '@/utils/instagramLimits';
 
 import { AppText } from '@/components/ui/AppText';
 
-function statusColor(status: CaptionCharStatus): string {
+function statusColor(
+  status: CaptionCharStatus,
+  statusPalette: ReturnType<typeof useThemeColors>['status']
+): string {
   switch (status) {
     case 'ok':
-      return Colors.status.ok;
+      return statusPalette.ok;
     case 'warning':
-      return Colors.status.warning;
+      return statusPalette.warning;
     case 'danger':
-      return Colors.status.danger;
+      return statusPalette.danger;
     case 'error':
-      return Colors.status.error;
+      return statusPalette.error;
   }
 }
 
@@ -33,6 +36,7 @@ export interface CharCounterProps {
 }
 
 export const CharCounter = memo<CharCounterProps>(({ text }) => {
+  const theme = useThemeColors();
   const { charCount, hashtagCount, status } = useCharCounter(text);
   const opacity = useSharedValue(1);
 
@@ -56,7 +60,7 @@ export const CharCounter = memo<CharCounterProps>(({ text }) => {
     opacity: opacity.value,
   }));
 
-  const color = statusColor(status);
+  const color = statusColor(status, theme.status);
 
   const label = `[#${hashtagCount}/${INSTAGRAM_LIMITS.HASHTAG_MAX}] · [${charCount}/${INSTAGRAM_LIMITS.CAPTION_MAX}]`;
 

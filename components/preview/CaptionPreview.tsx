@@ -1,7 +1,7 @@
 import React, { memo, useMemo } from 'react';
 import { Text } from 'react-native';
 
-import { Colors } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { getTruncatedCaption } from '@/utils/instagramLimits';
 
 const HASHTAG_SPLIT = /(#[\w\u0400-\u04FF]+)/;
@@ -16,18 +16,18 @@ export interface CaptionPreviewProps {
   usernamePrefix?: string;
 }
 
-function renderWithHashtags(body: string, baseColor: string): React.ReactNode {
+function renderWithHashtags(
+  body: string,
+  baseColor: string,
+  accentColor: string
+): React.ReactNode {
   const parts = body.split(HASHTAG_SPLIT);
   return parts.map((part, index) => {
     const isTag = /^#[\w\u0400-\u04FF]+$/.test(part);
     return (
       <Text
         key={`${index}-${part.slice(0, 16)}`}
-        style={
-          isTag
-            ? { color: Colors.accent.primary }
-            : { color: baseColor }
-        }
+        style={isTag ? { color: accentColor } : { color: baseColor }}
       >
         {part}
       </Text>
@@ -55,12 +55,14 @@ export const CaptionPreview = memo<CaptionPreviewProps>(
     suppressCollapseHint = false,
     usernamePrefix,
   }) => {
+    const theme = useThemeColors();
     const { visible, isTruncated } = useMemo(
       () => getTruncatedCaption(text),
       [text]
     );
 
-    const baseColor = Colors.text.primary;
+    const baseColor = theme.text.primary;
+    const accentColor = theme.accent.primary;
 
     const showUser = usernamePrefix !== undefined && usernamePrefix.length > 0;
 
@@ -71,7 +73,7 @@ export const CaptionPreview = memo<CaptionPreviewProps>(
             <UsernameBold name={usernamePrefix ?? ''} baseColor={baseColor} />
           ) : null}
           {showUser ? <Text style={{ color: baseColor }}>{' '}</Text> : null}
-          {renderWithHashtags(text, baseColor)}
+          {renderWithHashtags(text, baseColor, accentColor)}
         </Text>
       );
     }
@@ -83,10 +85,10 @@ export const CaptionPreview = memo<CaptionPreviewProps>(
             <UsernameBold name={usernamePrefix ?? ''} baseColor={baseColor} />
           ) : null}
           {showUser ? <Text style={{ color: baseColor }}>{' '}</Text> : null}
-          {renderWithHashtags(visible, baseColor)}
+          {renderWithHashtags(visible, baseColor, accentColor)}
           <Text
             onPress={onToggle}
-            style={{ color: Colors.accent.primary }}
+            style={{ color: accentColor }}
             suppressHighlighting
           >
             ...ещё
@@ -101,11 +103,11 @@ export const CaptionPreview = memo<CaptionPreviewProps>(
           <UsernameBold name={usernamePrefix ?? ''} baseColor={baseColor} />
         ) : null}
         {showUser ? <Text style={{ color: baseColor }}>{' '}</Text> : null}
-        {renderWithHashtags(text, baseColor)}
+        {renderWithHashtags(text, baseColor, accentColor)}
         {!suppressCollapseHint ? (
           <Text
             onPress={onToggle}
-            style={{ color: Colors.text.secondary }}
+            style={{ color: theme.text.secondary }}
             suppressHighlighting
           >
             {' '}

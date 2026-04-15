@@ -6,8 +6,9 @@ import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/shallow';
 
-import { Colors } from '@/constants/colors';
 import type { Post, SortOrder } from '@/types';
+
+import { useThemeColors } from '@/hooks/use-theme-colors';
 
 import { PostList } from '@/components/posts/PostList';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -39,6 +40,7 @@ function sortLabel(order: SortOrder): string {
 }
 
 export default function HomeScreen() {
+  const theme = useThemeColors();
   const { searchQuery, sortOrder, allPosts } = usePostsStore(
     useShallow((s) => ({
       searchQuery: s.searchQuery,
@@ -105,7 +107,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ backgroundColor: Colors.bg.primary }}
+      style={{ backgroundColor: theme.bg.primary }}
       edges={['top']}
     >
       <View className="flex-row items-center justify-between px-4 pb-2 pt-1">
@@ -116,8 +118,8 @@ export default function HomeScreen() {
           accessibilityLabel={`Сортировка: ${sortHint}. Нажмите, чтобы сменить`}
           className="min-h-12 flex-row items-center gap-1"
         >
-          <ArrowUpDown size={22} color={Colors.accent.primary} strokeWidth={1.8} />
-          <AppText variant="caption" color={Colors.text.secondary}>
+          <ArrowUpDown size={22} color={theme.accent.primary} strokeWidth={1.8} />
+          <AppText variant="caption" color={theme.text.secondary}>
             {sortHint}
           </AppText>
         </Pressable>

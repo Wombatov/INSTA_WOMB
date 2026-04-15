@@ -12,8 +12,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
-
 import { CharCounter } from '@/components/editor/CharCounter';
 import { HashtagSetPicker } from '@/components/editor/HashtagSetPicker';
 import { QuickInsert } from '@/components/editor/QuickInsert';
@@ -22,6 +20,7 @@ import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useToast } from '@/hooks/useToast';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { usePostsStore } from '@/store/postsStore';
 import { usePreviewStore } from '@/store/previewStore';
 import { hapticsSaveSuccess } from '@/utils/haptics';
@@ -31,6 +30,7 @@ const TEXT_INPUT_MIN = 200;
 const TEXT_INPUT_MAX = 420;
 
 export default function EditorScreen() {
+  const theme = useThemeColors();
   const tabBarHeight = useBottomTabBarHeight();
   const inputRef = useRef<React.ElementRef<typeof TextInput> | null>(null);
   const [text, setText] = useState('');
@@ -92,7 +92,7 @@ export default function EditorScreen() {
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ backgroundColor: Colors.bg.primary }}
+      style={{ backgroundColor: theme.bg.primary }}
       edges={['top']}
     >
       <KeyboardAvoidingView
@@ -124,12 +124,12 @@ export default function EditorScreen() {
                 style={{
                   minHeight: TEXT_INPUT_MIN,
                   maxHeight: TEXT_INPUT_MAX,
-                  color: Colors.text.primary,
-                  backgroundColor: Colors.bg.secondary,
+                  color: theme.text.primary,
+                  backgroundColor: theme.bg.secondary,
                   textAlignVertical: 'top',
                 }}
                 placeholder="Текст подписи…"
-                placeholderTextColor={Colors.text.tertiary}
+                placeholderTextColor={theme.text.tertiary}
                 multiline
                 value={text}
                 onChangeText={setText}
@@ -153,12 +153,12 @@ export default function EditorScreen() {
             <Pressable
               onPress={() => setPickerOpen(true)}
               className="mb-3 min-h-12 flex-row items-center justify-center gap-2 rounded-xl px-3"
-              style={{ backgroundColor: Colors.bg.secondary }}
+              style={{ backgroundColor: theme.bg.secondary }}
               accessibilityRole="button"
               accessibilityLabel="Выбрать набор хэштегов"
             >
-              <Hash size={20} color={Colors.accent.primary} strokeWidth={1.8} />
-              <AppText variant="bodyMedium" color={Colors.accent.primary}>
+              <Hash size={20} color={theme.accent.primary} strokeWidth={1.8} />
+              <AppText variant="bodyMedium" color={theme.accent.primary}>
                 Хэштеги
               </AppText>
             </Pressable>

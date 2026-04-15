@@ -1,9 +1,8 @@
 import React, { memo } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
-import { Colors } from '@/constants/colors';
-
 import { AppText } from '@/components/ui/AppText';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 
 const ITEMS = [
   { key: 'nl', label: '↵ Пустая строка', insert: '\n\n' },
@@ -20,6 +19,7 @@ export interface QuickInsertProps {
 }
 
 export const QuickInsert = memo<QuickInsertProps>(({ onInsert }) => {
+  const theme = useThemeColors();
   return (
     <ScrollView
       horizontal
@@ -33,11 +33,11 @@ export const QuickInsert = memo<QuickInsertProps>(({ onInsert }) => {
             key={item.key}
             onPress={() => onInsert(item.insert)}
             className="h-10 shrink-0 items-center justify-center rounded-lg px-2"
-            style={{ backgroundColor: Colors.bg.tertiary }}
+            style={{ backgroundColor: theme.bg.tertiary }}
             accessibilityRole="button"
             accessibilityLabel={item.label}
           >
-            <AppText variant="caption" color={Colors.text.primary}>
+            <AppText variant="caption" color={theme.text.primary}>
               {item.label}
             </AppText>
           </Pressable>

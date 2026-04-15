@@ -13,7 +13,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 
-import { Colors } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 
 import { AppText } from './AppText';
 
@@ -30,6 +30,7 @@ const { height: SCREEN_H } = Dimensions.get('window');
 
 export const BottomSheet = memo<BottomSheetProps>(
   ({ isVisible, onClose, children, title }) => {
+    const theme = useThemeColors();
     const insets = useSafeAreaInsets();
     const { height } = useWindowDimensions();
     const translateY = useSharedValue(SCREEN_H);
@@ -85,7 +86,7 @@ export const BottomSheet = memo<BottomSheetProps>(
               {
                 maxHeight: sheetMaxHeight,
                 paddingBottom: insets.bottom + 16,
-                backgroundColor: Colors.bg.elevated,
+                backgroundColor: theme.bg.elevated,
               },
               sheetStyle,
             ]}
@@ -93,7 +94,7 @@ export const BottomSheet = memo<BottomSheetProps>(
             {title ? (
               <View
                 className="mb-3 pb-3"
-                style={{ borderBottomWidth: 1, borderBottomColor: Colors.border.subtle }}
+                style={{ borderBottomWidth: 1, borderBottomColor: theme.border.subtle }}
               >
                 <AppText variant="sectionTitle" className="text-center">
                   {title}

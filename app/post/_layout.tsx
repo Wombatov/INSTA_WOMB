@@ -1,16 +1,18 @@
 import { Stack } from 'expo-router';
 
-import { Colors } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 
 export default function PostStackLayout() {
+  const theme = useThemeColors();
+
   return (
     <Stack
       screenOptions={{
         headerShown: true,
-        headerStyle: { backgroundColor: Colors.bg.primary },
-        headerTintColor: Colors.text.primary,
+        headerStyle: { backgroundColor: theme.bg.primary },
+        headerTintColor: theme.text.primary,
         headerShadowVisible: false,
-        contentStyle: { backgroundColor: Colors.bg.primary },
+        contentStyle: { backgroundColor: theme.bg.primary },
       }}
     />
   );

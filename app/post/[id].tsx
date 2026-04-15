@@ -20,7 +20,6 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useNavigation } from '@react-navigation/native';
 
-import { Colors } from '@/constants/colors';
 import { CharCounter } from '@/components/editor/CharCounter';
 import { HashtagSetPicker } from '@/components/editor/HashtagSetPicker';
 import { QuickInsert } from '@/components/editor/QuickInsert';
@@ -29,6 +28,7 @@ import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { useToast } from '@/hooks/useToast';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { usePostsStore } from '@/store/postsStore';
 import { hapticsDeleteHeavy, hapticsSaveSuccess } from '@/utils/haptics';
 import { insertFragmentAtSelection } from '@/utils/textInsert';
@@ -42,6 +42,7 @@ export default function EditPostScreen() {
   const navigation = useNavigation();
   const headerHeight = useHeaderHeight();
   const insets = useSafeAreaInsets();
+  const theme = useThemeColors();
 
   const posts = usePostsStore((s) => s.posts);
   const updatePost = usePostsStore((s) => s.updatePost);
@@ -105,9 +106,9 @@ export default function EditPostScreen() {
             accessibilityRole="button"
             accessibilityLabel="Переключить черновик или опубликован"
             className="min-h-10 justify-center rounded-lg px-2 py-1"
-            style={{ backgroundColor: Colors.bg.tertiary }}
+            style={{ backgroundColor: theme.bg.tertiary }}
           >
-            <AppText variant="caption" color={Colors.text.primary}>
+            <AppText variant="caption" color={theme.text.primary}>
               {post?.status === 'published' ? 'Опубликован' : 'Черновик'}
             </AppText>
           </Pressable>
@@ -117,12 +118,12 @@ export default function EditPostScreen() {
             accessibilityLabel="Удалить пост"
             className="min-h-12 min-w-12 items-center justify-center"
           >
-            <Trash2 size={22} color={Colors.status.error} strokeWidth={1.8} />
+            <Trash2 size={22} color={theme.status.error} strokeWidth={1.8} />
           </Pressable>
         </View>
       ),
     });
-  }, [confirmDelete, navigation, post?.status, toggleStatus]);
+  }, [confirmDelete, navigation, post?.status, theme.bg.tertiary, theme.status.error, theme.text.primary, toggleStatus]);
 
   const onSave = useCallback(() => {
     if (!id || !post) {
@@ -176,7 +177,7 @@ export default function EditPostScreen() {
       <>
         <Stack.Screen options={{ title: 'Пост' }} />
         <SafeAreaView className="flex-1 items-center justify-center p-4">
-          <AppText variant="body" color={Colors.text.secondary}>
+          <AppText variant="body" color={theme.text.secondary}>
             Пост не найден
           </AppText>
           <Button label="Назад" onPress={() => router.back()} variant="ghost" size="md" />
@@ -190,7 +191,7 @@ export default function EditPostScreen() {
       <Stack.Screen options={{ title: 'Редактор' }} />
       <SafeAreaView
         className="flex-1"
-        style={{ backgroundColor: Colors.bg.primary }}
+        style={{ backgroundColor: theme.bg.primary }}
         edges={['bottom']}
       >
         <KeyboardAvoidingView
@@ -218,12 +219,12 @@ export default function EditPostScreen() {
                   style={{
                     minHeight: TEXT_INPUT_MIN,
                     maxHeight: TEXT_INPUT_MAX,
-                    color: Colors.text.primary,
-                    backgroundColor: Colors.bg.secondary,
+                    color: theme.text.primary,
+                    backgroundColor: theme.bg.secondary,
                     textAlignVertical: 'top',
                   }}
                   placeholder="Текст подписи…"
-                  placeholderTextColor={Colors.text.tertiary}
+                  placeholderTextColor={theme.text.tertiary}
                   multiline
                   value={text}
                   onChangeText={setText}
@@ -247,11 +248,11 @@ export default function EditPostScreen() {
               <Pressable
                 onPress={() => setPickerOpen(true)}
                 className="mb-3 min-h-12 flex-row items-center justify-center gap-2 rounded-xl px-3"
-                style={{ backgroundColor: Colors.bg.secondary }}
+                style={{ backgroundColor: theme.bg.secondary }}
                 accessibilityRole="button"
                 accessibilityLabel="Хэштеги"
               >
-                <AppText variant="bodyMedium" color={Colors.accent.primary}>
+                <AppText variant="bodyMedium" color={theme.accent.primary}>
                   # Хэштеги
                 </AppText>
               </Pressable>

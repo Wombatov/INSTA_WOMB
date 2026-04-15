@@ -4,11 +4,12 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Colors } from '@/constants/colors';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 
 const TAB_BAR_BASE_HEIGHT = 56;
 
 export default function TabLayout() {
+  const theme = useThemeColors();
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 8);
   const tabBarHeight = TAB_BAR_BASE_HEIGHT + bottomInset;
@@ -18,14 +19,14 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.bg.secondary,
-          borderTopColor: Colors.border.subtle,
+          backgroundColor: theme.bg.secondary,
+          borderTopColor: theme.border.subtle,
           paddingTop: 6,
           height: tabBarHeight,
           paddingBottom: bottomInset,
         },
-        tabBarActiveTintColor: Colors.accent.primary,
-        tabBarInactiveTintColor: Colors.text.tertiary,
+        tabBarActiveTintColor: theme.accent.primary,
+        tabBarInactiveTintColor: theme.text.tertiary,
         tabBarLabelStyle: { fontSize: 11 },
       }}
     >
@@ -58,7 +59,7 @@ export default function TabLayout() {
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 className="h-14 w-14 items-center justify-center rounded-full"
                 style={{
-                  backgroundColor: Colors.accent.primary,
+                  backgroundColor: theme.accent.primary,
                   elevation: 10,
                   shadowColor: '#000',
                   shadowOpacity: 0.28,
@@ -72,7 +73,7 @@ export default function TabLayout() {
                 style={{
                   marginTop: 4,
                   fontSize: 11,
-                  color: Colors.text.tertiary,
+                  color: theme.text.tertiary,
                 }}
               >
                 Новый

@@ -7,8 +7,8 @@ import {
   View,
 } from 'react-native';
 
-import { Colors } from '@/constants/colors';
 import type { HashtagSet } from '@/types';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
@@ -28,6 +28,7 @@ export interface HashtagSetEditorSheetProps {
 
 export const HashtagSetEditorSheet = memo<HashtagSetEditorSheetProps>(
   ({ isVisible, onClose, editingSet }) => {
+    const theme = useThemeColors();
     const createSet = useHashtagsStore((s) => s.createSet);
     const updateSet = useHashtagsStore((s) => s.updateSet);
     const { showToast } = useToast();
@@ -100,36 +101,36 @@ export const HashtagSetEditorSheet = memo<HashtagSetEditorSheetProps>(
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <AppText variant="label" color={Colors.text.secondary} className="mb-1">
+            <AppText variant="label" color={theme.text.secondary} className="mb-1">
               Название
             </AppText>
             <TextInput
               value={name}
               onChangeText={setName}
               placeholder="Например: Путешествия"
-              placeholderTextColor={Colors.text.tertiary}
+              placeholderTextColor={theme.text.tertiary}
               className="mb-4 min-h-12 rounded-xl px-3 py-2"
               style={{
-                color: Colors.text.primary,
-                backgroundColor: Colors.bg.secondary,
+                color: theme.text.primary,
+                backgroundColor: theme.bg.secondary,
               }}
               accessibilityLabel="Название набора хэштегов"
               accessibilityHint="Обязательное поле"
             />
 
-            <AppText variant="label" color={Colors.text.secondary} className="mb-1">
+            <AppText variant="label" color={theme.text.secondary} className="mb-1">
               Хэштеги
             </AppText>
             <TextInput
               value={rawHashtags}
               onChangeText={setRawHashtags}
               placeholder="#travel #nature или через запятую"
-              placeholderTextColor={Colors.text.tertiary}
+              placeholderTextColor={theme.text.tertiary}
               multiline
               className="mb-2 min-h-28 rounded-xl px-3 py-2"
               style={{
-                color: Colors.text.primary,
-                backgroundColor: Colors.bg.secondary,
+                color: theme.text.primary,
+                backgroundColor: theme.bg.secondary,
                 textAlignVertical: 'top',
               }}
               accessibilityLabel="Список хэштегов"
@@ -137,7 +138,7 @@ export const HashtagSetEditorSheet = memo<HashtagSetEditorSheetProps>(
             />
             <AppText
               variant="caption"
-              color={Colors.text.secondary}
+              color={theme.text.secondary}
               className="mb-4"
             >
               Хэштегов: {hashtagCount} / {INSTAGRAM_LIMITS.HASHTAG_MAX}

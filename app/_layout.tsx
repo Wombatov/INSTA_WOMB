@@ -28,8 +28,8 @@ import { StatusBar } from 'expo-status-bar';
 import { BootLoadingScreen } from '@/components/debug/BootLoadingScreen';
 import { RootErrorBoundary } from '@/components/debug/RootErrorBoundary';
 import { ToastProvider } from '@/components/ui/Toast';
-import { Colors } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useSettingsStore } from '@/store/settingsStore';
 
 SplashScreen.preventAutoHideAsync();
@@ -40,10 +40,11 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const theme = useThemeColors();
 
   return (
     <GestureHandlerRootView
-      style={{ flex: 1, backgroundColor: Colors.bg.primary }}
+      style={{ flex: 1, backgroundColor: theme.bg.primary }}
     >
       <RootErrorBoundary>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

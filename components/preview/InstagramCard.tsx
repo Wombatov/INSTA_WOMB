@@ -9,9 +9,8 @@ import {
   UserRound,
 } from 'lucide-react-native';
 
-import { Colors } from '@/constants/colors';
-
 import { CaptionPreview } from './CaptionPreview';
+import { useThemeColors } from '@/hooks/use-theme-colors';
 import { useSettingsStore } from '@/store/settingsStore';
 
 export interface InstagramCardProps {
@@ -19,6 +18,7 @@ export interface InstagramCardProps {
 }
 
 export const InstagramCard = memo<InstagramCardProps>(({ text }) => {
+  const theme = useThemeColors();
   const username = useSettingsStore((s) => s.settings.username);
   const [layoutMode, setLayoutMode] = useState<'full' | 'clipped'>('clipped');
   const [captionExpanded, setCaptionExpanded] = useState(false);
@@ -37,7 +37,7 @@ export const InstagramCard = memo<InstagramCardProps>(({ text }) => {
     setCaptionExpanded(false);
   }, []);
 
-  const iconColor = Colors.text.primary;
+  const iconColor = theme.text.primary;
 
   return (
     <View className="w-full">
@@ -50,13 +50,13 @@ export const InstagramCard = memo<InstagramCardProps>(({ text }) => {
           className="min-h-12 flex-1 items-center justify-center rounded-lg px-3 py-2"
           style={{
             backgroundColor:
-              layoutMode === 'full' ? Colors.accent.subtle : Colors.bg.tertiary,
+              layoutMode === 'full' ? theme.accent.subtle : theme.bg.tertiary,
           }}
         >
           <Text
             style={{
               color:
-                layoutMode === 'full' ? Colors.accent.light : Colors.text.secondary,
+                layoutMode === 'full' ? theme.accent.light : theme.text.secondary,
               fontWeight: layoutMode === 'full' ? '600' : '400',
             }}
           >
@@ -71,13 +71,13 @@ export const InstagramCard = memo<InstagramCardProps>(({ text }) => {
           className="min-h-12 flex-1 items-center justify-center rounded-lg px-3 py-2"
           style={{
             backgroundColor:
-              layoutMode === 'clipped' ? Colors.accent.subtle : Colors.bg.tertiary,
+              layoutMode === 'clipped' ? theme.accent.subtle : theme.bg.tertiary,
           }}
         >
           <Text
             style={{
               color:
-                layoutMode === 'clipped' ? Colors.accent.light : Colors.text.secondary,
+                layoutMode === 'clipped' ? theme.accent.light : theme.text.secondary,
               fontWeight: layoutMode === 'clipped' ? '600' : '400',
             }}
           >
@@ -88,19 +88,19 @@ export const InstagramCard = memo<InstagramCardProps>(({ text }) => {
 
       <View
         className="overflow-hidden rounded-xl"
-        style={{ backgroundColor: Colors.instagram.preview_bg }}
+        style={{ backgroundColor: theme.instagram.preview_bg }}
       >
         <View className="flex-row items-center justify-between px-3 py-2">
           <View className="flex-row items-center gap-2">
             <View
               className="h-9 w-9 items-center justify-center rounded-full"
-              style={{ backgroundColor: Colors.bg.tertiary }}
+              style={{ backgroundColor: theme.bg.tertiary }}
             >
-              <UserRound size={20} color={Colors.text.secondary} />
+              <UserRound size={20} color={theme.text.secondary} />
             </View>
             <Text
               style={{
-                color: Colors.text.primary,
+                color: theme.text.primary,
                 fontWeight: '600',
               }}
               accessibilityRole="text"
@@ -113,7 +113,7 @@ export const InstagramCard = memo<InstagramCardProps>(({ text }) => {
             accessibilityLabel="Ещё действия"
             className="min-h-12 min-w-12 items-center justify-center"
           >
-            <MoreHorizontal size={22} color={Colors.text.primary} />
+            <MoreHorizontal size={22} color={theme.text.primary} />
           </Pressable>
         </View>
 
@@ -121,7 +121,7 @@ export const InstagramCard = memo<InstagramCardProps>(({ text }) => {
           className="w-full items-center justify-center"
           style={{
             aspectRatio: 1,
-            backgroundColor: Colors.bg.secondary,
+            backgroundColor: theme.bg.secondary,
           }}
           accessibilityRole="image"
           accessibilityLabel="Заглушка изображения поста"
