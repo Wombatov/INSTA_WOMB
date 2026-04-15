@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 
 import type { PostTemplate } from '@/types';
+import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { AppText } from '@/components/ui/AppText';
@@ -33,6 +34,7 @@ function emptyValues(keys: string[]): Record<string, string> {
 export const ApplyTemplateSheet = memo<ApplyTemplateSheetProps>(
   ({ template, isVisible, onClose, onComplete }) => {
     const theme = useThemeColors();
+    const keyboardInset = useKeyboardInset();
     const [values, setValues] = useState<Record<string, string>>({});
 
     const keys = template?.variables ?? [];
@@ -73,14 +75,19 @@ export const ApplyTemplateSheet = memo<ApplyTemplateSheetProps>(
       return null;
     }
 
+    const scrollBottomPad = 24 + keyboardInset;
+
     return (
       <BottomSheet isVisible={isVisible} onClose={onClose} title={title}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ width: '100%' }}
         >
           <ScrollView
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: scrollBottomPad }}
           >
             {keys.length === 0 ? (
               <AppText variant="body" color={theme.text.secondary} className="mb-4">
