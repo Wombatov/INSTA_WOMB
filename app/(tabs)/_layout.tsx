@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { type Href, Tabs } from 'expo-router';
 import { FileText, Layout, PenLine, Settings } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -43,6 +43,7 @@ export default function TabLayout() {
         name="templates"
         options={{
           title: 'Шаблоны',
+          href: '/templates' as Href,
           tabBarIcon: ({ color, size }) => (
             <Layout size={size ?? 24} color={color} strokeWidth={1.8} />
           ),

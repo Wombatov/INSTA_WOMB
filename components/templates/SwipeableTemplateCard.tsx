@@ -13,6 +13,16 @@ import { useThemeColors } from '@/hooks/use-theme-colors';
 import { AppText } from '@/components/ui/AppText';
 import { hapticsDeleteHeavy } from '@/utils/haptics';
 
+function formatVariableCountRu(count: number): string {
+  if (count === 0) {
+    return 'Без переменных';
+  }
+  if (count === 1) {
+    return '1 переменная';
+  }
+  return `${count} переменных`;
+}
+
 const DELETE_WIDTH = 72;
 const SPRING = { damping: 20, stiffness: 300 };
 const PREVIEW_MAX = 140;
@@ -91,10 +101,7 @@ export const SwipeableTemplateCard = memo<SwipeableTemplateCardProps>(
       return `${t.slice(0, PREVIEW_MAX)}…`;
     }, [item.content]);
 
-    const varLabel =
-      item.variables.length === 0
-        ? 'Без переменных'
-        : `${item.variables.length} перем.`;
+    const varLabel = formatVariableCountRu(item.variables.length);
 
     return (
       <View className="mb-3 overflow-hidden rounded-xl">

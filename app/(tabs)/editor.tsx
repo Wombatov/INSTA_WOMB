@@ -1,4 +1,5 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useFocusEffect } from '@react-navigation/native';
 import { type Href, router } from 'expo-router';
 import { Hash, Layout } from 'lucide-react-native';
 import React, { useCallback, useRef, useState } from 'react';
@@ -12,14 +13,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { PostTemplate } from '@/types';
-
 import { CharCounter } from '@/components/editor/CharCounter';
 import { HashtagSetPicker } from '@/components/editor/HashtagSetPicker';
 import { QuickInsert } from '@/components/editor/QuickInsert';
 import { TruncationMarker } from '@/components/editor/TruncationMarker';
-import { ApplyTemplateSheet } from '@/components/templates/ApplyTemplateSheet';
-import { TemplateListBottomSheet } from '@/components/templates/TemplateListBottomSheet';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
@@ -40,15 +37,31 @@ export default function EditorScreen() {
   const [text, setText] = useState('');
   const [selection, setSelection] = useState({ start: 0, end: 0 });
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [templateListOpen, setTemplateListOpen] = useState(false);
-  const [applyTemplate, setApplyTemplate] = useState<PostTemplate | null>(null);
-  const [applyTemplateOpen, setApplyTemplateOpen] = useState(false);
 
   const createPost = usePostsStore((s) => s.createPost);
+  const updatePost = usePostsStore((s) => s.updatePost);
   const setDraftCaption = usePreviewStore((s) => s.setDraftCaption);
+  const takePendingEditorText = usePreviewStore((s) => s.takePendingEditorText);
+  const setTemplateDraftPostId = usePreviewStore((s) => s.setTemplateDraftPostId);
 
   const { showToast } = useToast();
   const { copy, isCopied } = useCopyToClipboard(text);
+
+  useFocusEffect(
+    useCallback(() => {
+      const pending = takePendingEditorText();
+      if (pending != null && pending.length > 0) {
+        setText(pending);
+        requestAnimationFrame(() => {
+          const len = pending.length;
+          inputRef.current?.setNativeProps({
+            selection: { start: len, end: len },
+          });
+          inputRef.current?.focus();
+        });
+      }
+    }, [takePendingEditorText])
+  );
 
   const onSave = useCallback(() => {
     const trimmed = text.trim();
@@ -57,7 +70,13 @@ export default function EditorScreen() {
       return;
     }
     try {
-      createPost(trimmed);
+      const fromTemplateId = usePreviewStore.getState().templateDraftPostId;
+      if (fromTemplateId) {
+        updatePost(fromTemplateId, { content: trimmed });
+        setTemplateDraftPostId(null);
+      } else {
+        createPost(trimmed);
+      }
       setDraftCaption(trimmed);
       setText('');
       void hapticsSaveSuccess();
@@ -65,7 +84,14 @@ export default function EditorScreen() {
     } catch {
       showToast({ message: 'Не удалось сохранить пост', variant: 'error' });
     }
-  }, [createPost, setDraftCaption, showToast, text]);
+  }, [
+    createPost,
+    setDraftCaption,
+    setTemplateDraftPostId,
+    showToast,
+    text,
+    updatePost,
+  ]);
 
   const onPreview = useCallback(() => {
     const next = text.trim();
@@ -74,25 +100,6 @@ export default function EditorScreen() {
     }
     router.push('/post/preview' as Href);
   }, [setDraftCaption, text]);
-
-  const onPickTemplateFromList = useCallback((t: PostTemplate) => {
-    setApplyTemplate(t);
-    setTemplateListOpen(false);
-    setApplyTemplateOpen(true);
-  }, []);
-
-  const closeApplyTemplate = useCallback(() => {
-    setApplyTemplateOpen(false);
-    setApplyTemplate(null);
-  }, []);
-
-  const onTemplateApplied = useCallback(
-    (resolvedText: string) => {
-      const post = createPost(resolvedText);
-      router.push(`/post/${post.id}` as Href);
-    },
-    [createPost]
-  );
 
   const onQuickInsert = useCallback(
     (fragment: string) => {
@@ -112,6 +119,10 @@ export default function EditorScreen() {
     },
     [selection, text]
   );
+
+  const openTemplates = useCallback(() => {
+    router.push('/templates' as Href);
+  }, []);
 
   const scrollBottomPad = tabBarHeight + 28;
 
@@ -177,11 +188,11 @@ export default function EditorScreen() {
             </View>
 
             <Pressable
-              onPress={() => setTemplateListOpen(true)}
+              onPress={openTemplates}
               className="mb-2 min-h-12 flex-row items-center justify-center gap-2 rounded-xl px-3"
               style={{ backgroundColor: theme.bg.secondary }}
               accessibilityRole="button"
-              accessibilityLabel="Создать пост из шаблона"
+              accessibilityLabel="Открыть шаблоны"
             >
               <Layout size={20} color={theme.accent.primary} strokeWidth={1.8} />
               <AppText variant="bodyMedium" color={theme.accent.primary}>
@@ -240,19 +251,6 @@ export default function EditorScreen() {
         onClose={() => setPickerOpen(false)}
         postText={text}
         onChangePostText={setText}
-      />
-
-      <TemplateListBottomSheet
-        isVisible={templateListOpen}
-        onClose={() => setTemplateListOpen(false)}
-        onSelectTemplate={onPickTemplateFromList}
-      />
-
-      <ApplyTemplateSheet
-        template={applyTemplate}
-        isVisible={applyTemplateOpen && applyTemplate !== null}
-        onClose={closeApplyTemplate}
-        onComplete={onTemplateApplied}
       />
     </SafeAreaView>
   );
