@@ -166,8 +166,15 @@ export default function HomeScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
         className="pb-2"
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+        contentContainerStyle={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+          paddingHorizontal: 16,
+          paddingVertical: 4,
+        }}
       >
         {FILTER_CHIPS.map((chip) => {
           const active = postFilter === chip.id;
@@ -181,8 +188,9 @@ export default function HomeScreen() {
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               accessibilityLabel={`Фильтр: ${chip.label}`}
-              className="min-h-12 justify-center rounded-full px-4 py-2"
+              className="justify-center rounded-full px-3.5 py-2"
               style={{
+                minHeight: 44,
                 backgroundColor: active
                   ? theme.accent.subtle
                   : theme.bg.secondary,
@@ -191,7 +199,8 @@ export default function HomeScreen() {
               }}
             >
               <AppText
-                variant="bodyMedium"
+                variant="caption"
+                className="font-medium"
                 style={{
                   color: active ? theme.accent.primary : theme.text.secondary,
                 }}
