@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { FileText, PenLine, Settings } from 'lucide-react-native';
+import { FileText, Layout, PenLine, Settings } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,6 +36,15 @@ export default function TabLayout() {
           title: 'Посты',
           tabBarIcon: ({ color, size }) => (
             <FileText size={size ?? 24} color={color} strokeWidth={1.8} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="templates"
+        options={{
+          title: 'Шаблоны',
+          tabBarIcon: ({ color, size }) => (
+            <Layout size={size ?? 24} color={color} strokeWidth={1.8} />
           ),
         }}
       />

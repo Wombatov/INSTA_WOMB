@@ -21,6 +21,16 @@ export interface HashtagSet {
   createdAt: string;
 }
 
+export interface PostTemplate {
+  id: string;
+  name: string;
+  /** Текст с переменными вида {{продукт}}, {{цена}} */
+  content: string;
+  /** Заполняется из `content` при создании/обновлении */
+  variables: string[];
+  createdAt: string;
+}
+
 export interface AppSettings {
   username: string;
   avatarUri?: string;
