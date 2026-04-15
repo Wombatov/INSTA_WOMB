@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import {
   Dimensions,
   KeyboardAvoidingView,
@@ -21,6 +21,14 @@ import { hapticsSaveSuccess } from '@/utils/haptics';
 
 const WINDOW_H = Dimensions.get('window').height;
 
+function scrollSheetToContentEnd(scrollRef: React.RefObject<ScrollView | null>): void {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
+  });
+}
+
 export interface TemplateEditorSheetProps {
   isVisible: boolean;
   onClose: () => void;
@@ -34,6 +42,7 @@ export const TemplateEditorSheet = memo<TemplateEditorSheetProps>(
     const createTemplate = useTemplatesStore((s) => s.createTemplate);
     const { showToast } = useToast();
 
+    const scrollRef = useRef<ScrollView>(null);
     const [name, setName] = useState('');
     const [content, setContent] = useState('');
 
@@ -44,6 +53,17 @@ export const TemplateEditorSheet = memo<TemplateEditorSheetProps>(
       setName('');
       setContent('');
     }, [isVisible]);
+
+    /** Когда клавиатура поднялась — прокрутить к нижним полям */
+    useEffect(() => {
+      if (keyboardInset <= 0) {
+        return;
+      }
+      const t = setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 120);
+      return () => clearTimeout(t);
+    }, [keyboardInset]);
 
     const varHint = extractVariables(content);
 
@@ -62,12 +82,16 @@ export const TemplateEditorSheet = memo<TemplateEditorSheetProps>(
       onClose();
     }, [content, createTemplate, name, onClose, showToast]);
 
-    /** Как в BottomSheet: ~75% экрана минус шапка «Новый шаблон» */
     const sheetMax = WINDOW_H * 0.75;
     const sheetTitleReserve = 76;
     const footerBlock = 92;
-    const bodyCap = Math.max(220, sheetMax - sheetTitleReserve);
-    const scrollMax = Math.max(140, bodyCap - footerBlock);
+    const keyboardOpen = keyboardInset > 0;
+    /** Без этого bodyCap + margin снизу превышали высоту шита — нижнее поле обрезалось и не скроллилось над клавиатурой */
+    const bodyCap = Math.max(
+      keyboardOpen ? 160 : 220,
+      sheetMax - sheetTitleReserve - (keyboardOpen ? keyboardInset : 0)
+    );
+    const scrollMax = Math.max(120, bodyCap - footerBlock);
 
     return (
       <BottomSheet isVisible={isVisible} onClose={onClose} title="Новый шаблон">
@@ -79,71 +103,70 @@ export const TemplateEditorSheet = memo<TemplateEditorSheetProps>(
           <View
             style={{
               width: '100%',
-              marginBottom: keyboardInset,
               maxHeight: bodyCap,
             }}
           >
             <ScrollView
+              ref={scrollRef}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="on-drag"
               showsVerticalScrollIndicator
               style={{ maxHeight: scrollMax }}
               contentContainerStyle={{
-                paddingBottom: 8,
+                paddingBottom: keyboardOpen ? 24 : 8,
               }}
             >
-              <View
-                className="mb-3 rounded-xl px-3 py-2.5"
-                style={{
-                  backgroundColor: theme.bg.secondary,
-                  borderWidth: 1,
-                  borderColor: theme.border.subtle,
-                }}
-              >
-                <AppText variant="caption" color={theme.text.secondary} className="mb-2 leading-5">
-                  Зачем: одна заготовка — потом только подставляешь названия, цены, даты.
-                </AppText>
-                <AppText variant="caption" color={theme.text.tertiary} className="mb-2 leading-5">
-                  Пустышки: напиши {'{{имя}}'} в двойных скобках — при заполнении появятся поля с
-                  этими именами.
-                </AppText>
+              {keyboardOpen ? (
                 <View
-                  className="rounded-lg px-2 py-1.5"
-                  style={{ backgroundColor: theme.bg.tertiary }}
+                  className="mb-2 rounded-lg px-2 py-1.5"
+                  style={{
+                    backgroundColor: theme.bg.secondary,
+                    borderWidth: 1,
+                    borderColor: theme.border.subtle,
+                  }}
                 >
-                  <AppText
-                    variant="caption"
-                    color={theme.text.primary}
-                    className="leading-5"
-                    accessibilityLabel="Пример шаблона со скобками"
-                  >
-                    Пример: ✨ {'{{товар}}'} за {'{{цена}}'} ₽
+                  <AppText variant="caption" color={theme.text.tertiary} numberOfLines={3}>
+                    Подсказка: плейсхолдеры {'{{товар}}'}, {'{{цена}}'} — при создании поста
+                    подставишь значения. Пример: «{'{{товар}}'} за {'{{цена}}'} ₽».
                   </AppText>
                 </View>
-              </View>
-
-              <AppText variant="label" color={theme.text.secondary} className="mb-1">
-                Название
-              </AppText>
-              <TextInput
-                className="mb-3 rounded-xl px-3 py-2 text-[15px] leading-[22px]"
-                style={{
-                  color: theme.text.primary,
-                  backgroundColor: theme.bg.secondary,
-                  minHeight: 44,
-                }}
-                placeholder="Например: Анонс продукта"
-                placeholderTextColor={theme.text.tertiary}
-                value={name}
-                onChangeText={setName}
-                accessibilityLabel="Название шаблона"
-              />
+              ) : (
+                <View
+                  className="mb-3 rounded-xl px-3 py-2.5"
+                  style={{
+                    backgroundColor: theme.bg.secondary,
+                    borderWidth: 1,
+                    borderColor: theme.border.subtle,
+                  }}
+                >
+                  <AppText variant="caption" color={theme.text.secondary} className="mb-2 leading-5">
+                    Зачем: одна заготовка — потом только подставляешь названия, цены, даты.
+                  </AppText>
+                  <AppText variant="caption" color={theme.text.tertiary} className="mb-2 leading-5">
+                    Пустышки: напиши {'{{имя}}'} в двойных скобках — при заполнении появятся поля с
+                    этими именами.
+                  </AppText>
+                  <View
+                    className="rounded-lg px-2 py-1.5"
+                    style={{ backgroundColor: theme.bg.tertiary }}
+                  >
+                    <AppText
+                      variant="caption"
+                      color={theme.text.primary}
+                      className="leading-5"
+                      accessibilityLabel="Пример шаблона со скобками"
+                    >
+                      Пример: ✨ {'{{товар}}'} за {'{{цена}}'} ₽
+                    </AppText>
+                  </View>
+                </View>
+              )}
 
               <AppText variant="label" color={theme.text.secondary} className="mb-1">
                 Текст подписи
               </AppText>
               <TextInput
-                className="mb-2 rounded-xl px-3 py-3 text-[15px] leading-[22px]"
+                className="mb-3 rounded-xl px-3 py-3 text-[15px] leading-[22px]"
                 style={{
                   color: theme.text.primary,
                   backgroundColor: theme.bg.secondary,
@@ -157,7 +180,26 @@ export const TemplateEditorSheet = memo<TemplateEditorSheetProps>(
                 scrollEnabled
                 value={content}
                 onChangeText={setContent}
+                onFocus={() => scrollSheetToContentEnd(scrollRef)}
                 accessibilityLabel="Текст шаблона с переменными в фигурных скобках"
+              />
+
+              <AppText variant="label" color={theme.text.secondary} className="mb-1">
+                Название
+              </AppText>
+              <TextInput
+                className="mb-2 rounded-xl px-3 py-2 text-[15px] leading-[22px]"
+                style={{
+                  color: theme.text.primary,
+                  backgroundColor: theme.bg.secondary,
+                  minHeight: 44,
+                }}
+                placeholder="Например: Анонс продукта"
+                placeholderTextColor={theme.text.tertiary}
+                value={name}
+                onChangeText={setName}
+                onFocus={() => scrollSheetToContentEnd(scrollRef)}
+                accessibilityLabel="Название шаблона"
               />
 
               <AppText variant="caption" color={theme.text.tertiary} className="leading-5">
