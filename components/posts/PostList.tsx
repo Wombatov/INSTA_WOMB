@@ -13,6 +13,8 @@ export interface PostListProps {
   posts: Post[];
   /** Посты есть, но поиск ничего не нашёл (иначе — пустой список постов) */
   emptySearch: boolean;
+  /** Выбран фильтр черновик/выложены, но под него нет постов (при этом посты вообще есть) */
+  emptyFilter?: boolean;
   onPostPress: (post: Post) => void;
   onPostCopy: (post: Post) => void;
   onPostDelete: (post: Post) => void;
@@ -25,6 +27,7 @@ export const PostList = memo<PostListProps>(
   ({
     posts,
     emptySearch,
+    emptyFilter = false,
     onPostPress,
     onPostCopy,
     onPostDelete,
@@ -54,15 +57,23 @@ export const PostList = memo<PostListProps>(
       () => (
         <EmptyState
           icon={FileText}
-          title={emptySearch ? 'Ничего не найдено' : 'Ещё нет постов'}
+          title={
+            emptySearch
+              ? 'Ничего не найдено'
+              : emptyFilter
+                ? 'Нет таких постов'
+                : 'Ещё нет постов'
+          }
           description={
             emptySearch
               ? 'Ничего не найдено по запросу'
-              : 'Ещё нет постов. Напиши первый!'
+              : emptyFilter
+                ? 'Смените фильтр или создайте пост с нужным статусом'
+                : 'Ещё нет постов. Напиши первый!'
           }
         />
       ),
-      [emptySearch]
+      [emptyFilter, emptySearch]
     );
 
     return (

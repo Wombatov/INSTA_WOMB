@@ -1,7 +1,7 @@
 import { type Href, router } from 'expo-router';
-import { Plus } from 'lucide-react-native';
+import { Layout as LayoutIcon, Plus } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, View } from 'react-native';
+import { FlatList, Pressable, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { PostTemplate } from '@/types';
@@ -10,11 +10,13 @@ import { ApplyTemplateSheet } from '@/components/templates/ApplyTemplateSheet';
 import { SwipeableTemplateCard } from '@/components/templates/SwipeableTemplateCard';
 import { TemplateEditorSheet } from '@/components/templates/TemplateEditorSheet';
 import { AppText } from '@/components/ui/AppText';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 import { usePostsStore } from '@/store/postsStore';
 import { useTemplatesStore } from '@/store/templatesStore';
 
 export default function TemplatesTabScreen() {
+  const { height: windowHeight } = useWindowDimensions();
   const theme = useThemeColors();
   const templates = useTemplatesStore((s) => s.templates);
   const deleteTemplate = useTemplatesStore((s) => s.deleteTemplate);
@@ -100,16 +102,20 @@ export default function TemplatesTabScreen() {
           keyExtractor={keyExtractor}
           renderItem={renderItem}
           contentContainerStyle={
-            sorted.length === 0 ? { flexGrow: 1 } : { paddingBottom: 24 }
+            sorted.length === 0
+              ? {
+                  flexGrow: 1,
+                  minHeight: Math.max(320, windowHeight * 0.55),
+                  justifyContent: 'center',
+                }
+              : { paddingBottom: 24 }
           }
           ListEmptyComponent={
-            <AppText
-              variant="body"
-              color={theme.text.secondary}
-              className="py-8 text-center"
-            >
-              Пока нет шаблонов. Нажмите «+», чтобы добавить.
-            </AppText>
+            <EmptyState
+              icon={LayoutIcon}
+              title="Нет шаблонов"
+              description="Создай шаблон для быстрого написания однотипных постов"
+            />
           }
         />
       </View>

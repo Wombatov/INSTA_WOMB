@@ -2,7 +2,7 @@ import * as Clipboard from 'expo-clipboard';
 import { type Href, router } from 'expo-router';
 import { ArrowUpDown, Check } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/shallow';
 
@@ -33,6 +33,14 @@ function sortLabel(order: SortOrder): string {
   return found?.label ?? 'Новые сначала';
 }
 
+type PostStatusFilter = 'all' | 'draft' | 'published';
+
+const FILTER_CHIPS: { id: PostStatusFilter; label: string }[] = [
+  { id: 'all', label: 'Все' },
+  { id: 'draft', label: 'Черновики' },
+  { id: 'published', label: 'Выложены' },
+];
+
 export default function HomeScreen() {
   const theme = useThemeColors();
   const { searchQuery, sortOrder, allPosts } = usePostsStore(
@@ -48,10 +56,23 @@ export default function HomeScreen() {
     [sortOrder]
   );
 
-  const posts = useMemo(
+  const [postFilter, setPostFilter] = useState<PostStatusFilter>('all');
+
+  const basePosts = useMemo(
     () => computeFilteredPosts(allPosts, searchQuery, sortOrder),
     [allPosts, searchQuery, sortOrder]
   );
+
+  const posts = useMemo(() => {
+    switch (postFilter) {
+      case 'draft':
+        return basePosts.filter((p) => p.status === 'draft');
+      case 'published':
+        return basePosts.filter((p) => p.status === 'published');
+      default:
+        return basePosts;
+    }
+  }, [basePosts, postFilter]);
 
   const setSearchQuery = useCallback((query: string) => {
     usePostsStore.getState().setSearchQuery(query);
@@ -111,7 +132,13 @@ export default function HomeScreen() {
   const emptySearch =
     allPosts.length > 0 &&
     searchQuery.trim().length > 0 &&
-    posts.length === 0;
+    basePosts.length === 0;
+
+  const emptyFilter =
+    allPosts.length > 0 &&
+    basePosts.length > 0 &&
+    posts.length === 0 &&
+    postFilter !== 'all';
 
   return (
     <SafeAreaView
@@ -136,10 +163,51 @@ export default function HomeScreen() {
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
       </View>
 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="pb-2"
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+      >
+        {FILTER_CHIPS.map((chip) => {
+          const active = postFilter === chip.id;
+          return (
+            <Pressable
+              key={chip.id}
+              onPress={() => {
+                void hapticsToggle();
+                setPostFilter(chip.id);
+              }}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              accessibilityLabel={`Фильтр: ${chip.label}`}
+              className="min-h-12 justify-center rounded-full px-4 py-2"
+              style={{
+                backgroundColor: active
+                  ? theme.accent.subtle
+                  : theme.bg.secondary,
+                borderWidth: 1,
+                borderColor: active ? theme.accent.primary : theme.border.subtle,
+              }}
+            >
+              <AppText
+                variant="bodyMedium"
+                style={{
+                  color: active ? theme.accent.primary : theme.text.secondary,
+                }}
+              >
+                {chip.label}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
       <View className="flex-1 px-4">
         <PostList
           posts={posts}
           emptySearch={emptySearch}
+          emptyFilter={emptyFilter}
           onPostPress={onPostPress}
           onPostCopy={onPostCopy}
           onPostDelete={onPostDelete}

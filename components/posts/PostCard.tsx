@@ -74,6 +74,7 @@ export const PostCard = memo<PostCardProps>(
             accessibilityRole="button"
             accessibilityLabel={statusA11y}
             accessibilityHint="Меняет статус поста между черновиком и выложенным"
+            hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
             className="min-h-12 flex-row items-center justify-center rounded-md px-2 py-1"
             style={{
               backgroundColor: isDraft
