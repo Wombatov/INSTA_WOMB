@@ -12,11 +12,22 @@ import { zustandPersistStorage } from '@/utils/storage';
 
 import { useSettingsStore } from './settingsStore';
 
+/** Старые сохранения могли содержать `alphabetical` — маппим на `newest`. */
+export function normalizeSortOrder(raw: SortOrder | string): SortOrder {
+  if (raw === 'alphabetical') {
+    return 'newest';
+  }
+  if (raw === 'newest' || raw === 'oldest' || raw === 'draftsFirst') {
+    return raw;
+  }
+  return 'newest';
+}
+
 /** Чистая фильтрация/сортировка для UI — не использовать как zustand-селектор (новый массив каждый раз). */
 export function computeFilteredPosts(
   posts: Post[],
   searchQuery: string,
-  sortOrder: SortOrder
+  sortOrder: SortOrder | string
 ): Post[] {
   const q = searchQuery.trim().toLowerCase();
   let list = posts.filter((post) => {
@@ -30,24 +41,34 @@ export function computeFilteredPosts(
   });
 
   list = [...list];
-  switch (sortOrder) {
+  const order = normalizeSortOrder(sortOrder);
+
+  switch (order) {
     case 'newest':
       list.sort(
         (a, b) =>
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
       break;
     case 'oldest':
       list.sort(
         (a, b) =>
-          new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
       break;
-    case 'alphabetical':
-      list.sort((a, b) =>
-        a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
-      );
+    case 'draftsFirst': {
+      list.sort((a, b) => {
+        const da = a.status === 'draft' ? 0 : 1;
+        const db = b.status === 'draft' ? 0 : 1;
+        if (da !== db) {
+          return da - db;
+        }
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
       break;
+    }
   }
   return list;
 }
@@ -135,6 +156,9 @@ export const usePostsStore = create<PostsState>()(
               !merged.publishedAt
             ) {
               merged.publishedAt = new Date().toISOString();
+            }
+            if (data.status === 'draft') {
+              merged.publishedAt = undefined;
             }
             return merged;
           }),

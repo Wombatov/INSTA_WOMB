@@ -1,4 +1,4 @@
-import { Copy } from 'lucide-react-native';
+import { Check, Copy } from 'lucide-react-native';
 import React, { memo, useCallback } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, {
@@ -12,8 +12,10 @@ import { useThemeColors } from '@/hooks/use-theme-colors';
 import type { Post } from '@/types';
 import { formatRelativePostDate } from '@/utils/relativeTime';
 import { INSTAGRAM_LIMITS } from '@/utils/instagramLimits';
+import { hapticsToggle } from '@/utils/haptics';
 
 import { AppText } from '@/components/ui/AppText';
+import { usePostsStore } from '@/store/postsStore';
 
 export interface PostCardProps {
   post: Post;
@@ -43,14 +45,20 @@ export const PostCard = memo<PostCardProps>(
 
     const isDraft = post.status === 'draft';
 
-    const badgeBg = isDraft
-      ? 'rgba(234, 179, 8, 0.22)'
-      : 'rgba(34, 197, 94, 0.22)';
-    const badgeFg = isDraft ? '#FACC15' : theme.status.ok;
+    const toggleStatus = useCallback(() => {
+      void hapticsToggle();
+      const next: Post['status'] = isDraft ? 'published' : 'draft';
+      usePostsStore.getState().updatePost(post.id, { status: next });
+    }, [isDraft, post.id]);
 
     const dateLabel = formatRelativePostDate(post.updatedAt);
 
     void _onDelete;
+
+    const statusLabel = isDraft ? 'Черновик' : 'Выложен';
+    const statusA11y = isDraft
+      ? 'Переключить на выложен'
+      : 'Переключить на черновик';
 
     return (
       <Animated.View
@@ -61,14 +69,37 @@ export const PostCard = memo<PostCardProps>(
         ]}
       >
         <View className="mb-2 flex-row items-center gap-2">
-          <View
-            className="rounded-md px-2 py-0.5"
-            style={{ backgroundColor: badgeBg }}
+          <Pressable
+            onPress={toggleStatus}
+            accessibilityRole="button"
+            accessibilityLabel={statusA11y}
+            accessibilityHint="Меняет статус поста между черновиком и выложенным"
+            className="min-h-12 flex-row items-center justify-center rounded-md px-2 py-1"
+            style={{
+              backgroundColor: isDraft
+                ? theme.bg.tertiary
+                : 'rgba(34, 197, 94, 0.22)',
+            }}
           >
-            <AppText variant="caption" style={{ color: badgeFg }}>
-              {isDraft ? 'Черновик' : 'Опубликован'}
-            </AppText>
-          </View>
+            {isDraft ? (
+              <AppText variant="caption" color={theme.text.secondary}>
+                {statusLabel}
+              </AppText>
+            ) : (
+              <View className="flex-row items-center gap-1">
+                <Check
+                  size={14}
+                  color={theme.status.ok}
+                  strokeWidth={2.5}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                />
+                <AppText variant="caption" style={{ color: theme.status.ok }}>
+                  {statusLabel}
+                </AppText>
+              </View>
+            )}
+          </Pressable>
           <View className="min-w-0 flex-1" />
           <AppText variant="caption" color={theme.text.tertiary}>
             {dateLabel}
@@ -88,7 +119,7 @@ export const PostCard = memo<PostCardProps>(
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           accessibilityRole="button"
-          accessibilityLabel={`Пост ${post.title || 'без названия'}, ${isDraft ? 'черновик' : 'опубликован'}`}
+          accessibilityLabel={`Пост ${post.title || 'без названия'}, ${isDraft ? 'черновик' : 'выложен'}`}
         >
           <Text
             className="mb-2 text-[15px] leading-[22px]"

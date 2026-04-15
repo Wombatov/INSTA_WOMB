@@ -32,3 +32,10 @@ export function hapticsDeleteHeavy(): Promise<void> {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
   );
 }
+
+/** Переключение статуса / выбор в списке */
+export function hapticsToggle(): Promise<void> {
+  return safeHaptic(() =>
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+  );
+}

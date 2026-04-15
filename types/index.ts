@@ -1,4 +1,4 @@
-export type SortOrder = 'newest' | 'oldest' | 'alphabetical';
+export type SortOrder = 'newest' | 'oldest' | 'draftsFirst';
 
 export interface Post {
   id: string;

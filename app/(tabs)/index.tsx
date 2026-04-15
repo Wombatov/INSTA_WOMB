@@ -1,6 +1,6 @@
 import * as Clipboard from 'expo-clipboard';
 import { type Href, router } from 'expo-router';
-import { ArrowUpDown } from 'lucide-react-native';
+import { ArrowUpDown, Check } from 'lucide-react-native';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,32 +11,26 @@ import type { Post, SortOrder } from '@/types';
 import { useThemeColors } from '@/hooks/use-theme-colors';
 
 import { PostList } from '@/components/posts/PostList';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { AppText } from '@/components/ui/AppText';
 import { useToast } from '@/hooks/useToast';
-import { computeFilteredPosts, usePostsStore } from '@/store/postsStore';
-import { hapticsCopy, hapticsDeleteHeavy } from '@/utils/haptics';
+import {
+  computeFilteredPosts,
+  normalizeSortOrder,
+  usePostsStore,
+} from '@/store/postsStore';
+import { hapticsCopy, hapticsDeleteHeavy, hapticsToggle } from '@/utils/haptics';
 
-function nextSortOrder(current: SortOrder): SortOrder {
-  switch (current) {
-    case 'newest':
-      return 'oldest';
-    case 'oldest':
-      return 'alphabetical';
-    case 'alphabetical':
-      return 'newest';
-  }
-}
+const SORT_OPTIONS: { id: SortOrder; label: string }[] = [
+  { id: 'newest', label: 'Новые сначала' },
+  { id: 'oldest', label: 'Старые сначала' },
+  { id: 'draftsFirst', label: 'Черновики сначала' },
+];
 
 function sortLabel(order: SortOrder): string {
-  switch (order) {
-    case 'newest':
-      return 'Сначала новые';
-    case 'oldest':
-      return 'Сначала старые';
-    case 'alphabetical':
-      return 'По алфавиту';
-  }
+  const found = SORT_OPTIONS.find((o) => o.id === order);
+  return found?.label ?? 'Новые сначала';
 }
 
 export default function HomeScreen() {
@@ -47,6 +41,11 @@ export default function HomeScreen() {
       sortOrder: s.sortOrder,
       allPosts: s.posts,
     }))
+  );
+
+  const effectiveSort = useMemo(
+    () => normalizeSortOrder(sortOrder),
+    [sortOrder]
   );
 
   const posts = useMemo(
@@ -64,16 +63,26 @@ export default function HomeScreen() {
 
   const { showToast } = useToast();
   const [refreshing, setRefreshing] = useState(false);
+  const [sortSheetOpen, setSortSheetOpen] = useState(false);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    setSortOrder('newest');
     setTimeout(() => setRefreshing(false), 250);
-  }, [setSortOrder]);
+  }, []);
 
-  const cycleSort = useCallback(() => {
-    setSortOrder(nextSortOrder(sortOrder));
-  }, [setSortOrder, sortOrder]);
+  const openSortSheet = useCallback(() => {
+    void hapticsToggle();
+    setSortSheetOpen(true);
+  }, []);
+
+  const selectSort = useCallback(
+    (order: SortOrder) => {
+      void hapticsToggle();
+      setSortOrder(order);
+      setSortSheetOpen(false);
+    },
+    [setSortOrder]
+  );
 
   const onPostPress = useCallback((post: Post) => {
     router.push(`/post/${post.id}` as Href);
@@ -97,7 +106,7 @@ export default function HomeScreen() {
     [showToast]
   );
 
-  const sortHint = useMemo(() => sortLabel(sortOrder), [sortOrder]);
+  const sortHint = useMemo(() => sortLabel(effectiveSort), [effectiveSort]);
 
   const emptySearch =
     allPosts.length > 0 &&
@@ -113,15 +122,13 @@ export default function HomeScreen() {
       <View className="flex-row items-center justify-between px-4 pb-2 pt-1">
         <AppText variant="sectionTitle">Посты</AppText>
         <Pressable
-          onPress={cycleSort}
+          onPress={openSortSheet}
           accessibilityRole="button"
-          accessibilityLabel={`Сортировка: ${sortHint}. Нажмите, чтобы сменить`}
-          className="min-h-12 flex-row items-center gap-1"
+          accessibilityLabel={`Сортировка: ${sortHint}`}
+          accessibilityHint="Открывает выбор порядка постов"
+          className="min-h-12 min-w-12 items-center justify-center"
         >
           <ArrowUpDown size={22} color={theme.accent.primary} strokeWidth={1.8} />
-          <AppText variant="caption" color={theme.text.secondary}>
-            {sortHint}
-          </AppText>
         </Pressable>
       </View>
 
@@ -140,6 +147,46 @@ export default function HomeScreen() {
           refreshing={refreshing}
         />
       </View>
+
+      <BottomSheet
+        isVisible={sortSheetOpen}
+        onClose={() => setSortSheetOpen(false)}
+        title="Сортировка"
+      >
+        {SORT_OPTIONS.map((opt) => {
+          const active = effectiveSort === opt.id;
+          return (
+            <Pressable
+              key={opt.id}
+              onPress={() => selectSort(opt.id)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              accessibilityLabel={opt.label}
+              className="min-h-12 flex-row items-center justify-between rounded-xl px-3 py-3"
+              style={{
+                backgroundColor: active ? theme.bg.secondary : 'transparent',
+              }}
+            >
+              <AppText
+                variant="bodyMedium"
+                color={active ? theme.accent.primary : theme.text.primary}
+              >
+                {opt.label}
+              </AppText>
+              {active ? (
+                <Check
+                  size={22}
+                  color={theme.accent.primary}
+                  strokeWidth={2.2}
+                  accessibilityElementsHidden
+                />
+              ) : (
+                <View className="h-[22px] w-[22px]" />
+              )}
+            </Pressable>
+          );
+        })}
+      </BottomSheet>
     </SafeAreaView>
   );
 }
