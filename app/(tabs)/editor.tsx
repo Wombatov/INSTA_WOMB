@@ -1,7 +1,6 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { useFocusEffect } from '@react-navigation/native';
 import { type Href, router } from 'expo-router';
-import { Hash, Layout } from 'lucide-react-native';
+import { Hash } from 'lucide-react-native';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -39,29 +38,10 @@ export default function EditorScreen() {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const createPost = usePostsStore((s) => s.createPost);
-  const updatePost = usePostsStore((s) => s.updatePost);
   const setDraftCaption = usePreviewStore((s) => s.setDraftCaption);
-  const takePendingEditorText = usePreviewStore((s) => s.takePendingEditorText);
-  const setTemplateDraftPostId = usePreviewStore((s) => s.setTemplateDraftPostId);
 
   const { showToast } = useToast();
   const { copy, isCopied } = useCopyToClipboard(text);
-
-  useFocusEffect(
-    useCallback(() => {
-      const pending = takePendingEditorText();
-      if (pending != null && pending.length > 0) {
-        setText(pending);
-        requestAnimationFrame(() => {
-          const len = pending.length;
-          inputRef.current?.setNativeProps({
-            selection: { start: len, end: len },
-          });
-          inputRef.current?.focus();
-        });
-      }
-    }, [takePendingEditorText])
-  );
 
   const onSave = useCallback(() => {
     const trimmed = text.trim();
@@ -70,13 +50,7 @@ export default function EditorScreen() {
       return;
     }
     try {
-      const fromTemplateId = usePreviewStore.getState().templateDraftPostId;
-      if (fromTemplateId) {
-        updatePost(fromTemplateId, { content: trimmed });
-        setTemplateDraftPostId(null);
-      } else {
-        createPost(trimmed);
-      }
+      createPost(trimmed);
       setDraftCaption(trimmed);
       setText('');
       void hapticsSaveSuccess();
@@ -84,14 +58,7 @@ export default function EditorScreen() {
     } catch {
       showToast({ message: 'Не удалось сохранить пост', variant: 'error' });
     }
-  }, [
-    createPost,
-    setDraftCaption,
-    setTemplateDraftPostId,
-    showToast,
-    text,
-    updatePost,
-  ]);
+  }, [createPost, setDraftCaption, showToast, text]);
 
   const onPreview = useCallback(() => {
     const next = text.trim();
@@ -192,11 +159,10 @@ export default function EditorScreen() {
               className="mb-2 min-h-12 flex-row items-center justify-center gap-2 rounded-xl px-3"
               style={{ backgroundColor: theme.bg.secondary }}
               accessibilityRole="button"
-              accessibilityLabel="Открыть шаблоны"
+              accessibilityLabel="Открыть рецепты"
             >
-              <Layout size={20} color={theme.accent.primary} strokeWidth={1.8} />
               <AppText variant="bodyMedium" color={theme.accent.primary}>
-                Из шаблона
+                📋 Рецепты
               </AppText>
             </Pressable>
 

@@ -1,33 +1,19 @@
-const PLACEHOLDER_RE = /\{\{\s*([^}]+?)\s*\}\}/g;
-
-/**
- * Все уникальные имена `{{переменная}}` в порядке первого появления.
- */
-export function extractVariables(content: string): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
+export function highlightPlaceholders(
+  text: string
+): Array<{ text: string; isPlaceholder: boolean }> {
+  const parts: Array<{ text: string; isPlaceholder: boolean }> = [];
+  const regex = /(\[[^\]]+\])/g;
+  let lastIndex = 0;
   let match: RegExpExecArray | null;
-  const re = new RegExp(PLACEHOLDER_RE.source, 'g');
-  while ((match = re.exec(content)) !== null) {
-    const name = match[1].trim();
-    if (name.length === 0 || seen.has(name)) {
-      continue;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ text: text.slice(lastIndex, match.index), isPlaceholder: false });
     }
-    seen.add(name);
-    out.push(name);
+    parts.push({ text: match[0], isPlaceholder: true });
+    lastIndex = match.index + match[0].length;
   }
-  return out;
-}
-
-/**
- * Подставляет значения; отсутствующий ключ → пустая строка.
- */
-export function applyVariables(
-  content: string,
-  values: Record<string, string>
-): string {
-  return content.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_full, raw: string) => {
-    const key = String(raw).trim();
-    return values[key] ?? '';
-  });
+  if (lastIndex < text.length) {
+    parts.push({ text: text.slice(lastIndex), isPlaceholder: false });
+  }
+  return parts;
 }

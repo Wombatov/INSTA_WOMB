@@ -1,5 +1,5 @@
 import { type Href, Tabs } from 'expo-router';
-import { FileText, Layout, PenLine, Settings } from 'lucide-react-native';
+import { BookOpen, FileText, PenLine, Settings } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -42,10 +42,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="templates"
         options={{
-          title: 'Шаблоны',
+          title: 'Рецепты',
           href: '/templates' as Href,
           tabBarIcon: ({ color, size }) => (
-            <Layout size={size ?? 24} color={color} strokeWidth={1.8} />
+            <BookOpen size={size ?? 24} color={color} strokeWidth={1.8} />
           ),
         }}
       />

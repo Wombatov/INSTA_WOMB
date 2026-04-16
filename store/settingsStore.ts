@@ -10,6 +10,7 @@ const defaultSettings: AppSettings = {
   defaultStatus: 'draft',
   sortOrder: 'newest',
   onboardingComplete: false,
+  recipeHintShown: false,
 };
 
 interface SettingsState {

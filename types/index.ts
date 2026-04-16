@@ -21,13 +21,25 @@ export interface HashtagSet {
   createdAt: string;
 }
 
-export interface PostTemplate {
+export type RecipeCategory =
+  | 'announce'
+  | 'story'
+  | 'sale'
+  | 'engage'
+  | 'edu'
+  | 'personal'
+  | 'custom';
+
+export interface Recipe {
   id: string;
   name: string;
-  /** Текст с переменными вида {{продукт}}, {{цена}} */
+  emoji: string;
+  category: RecipeCategory;
+  description: string;
   content: string;
-  /** Заполняется из `content` при создании/обновлении */
-  variables: string[];
+  tags: string[];
+  isBuiltIn: boolean;
+  usageCount: number;
   createdAt: string;
 }
 
@@ -40,4 +52,6 @@ export interface AppSettings {
   onboardingComplete: boolean;
   /** Показан ли тултип у маркера обрезки (125 символов) в редакторе */
   truncationMarkerTooltipSeen?: boolean;
+  /** Показан ли баннер-подсказка на экране применения рецепта */
+  recipeHintShown?: boolean;
 }
